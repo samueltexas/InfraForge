@@ -57,3 +57,29 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "private_endpoint_subnet_id" {
+  description = "Azure subnet resource ID for the Key Vault private endpoint."
+  type        = string
+
+  validation {
+    condition = can(regex(
+      "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.Network/virtualNetworks/[^/]+/subnets/[^/]+$",
+      var.private_endpoint_subnet_id
+    ))
+    error_message = "Provide a valid Azure subnet resource ID."
+  }
+}
+
+variable "virtual_network_id" {
+  description = "Azure virtual network resource ID for private DNS resolution."
+  type        = string
+
+  validation {
+    condition = can(regex(
+      "^/subscriptions/[0-9a-fA-F-]{36}/resourceGroups/[^/]+/providers/Microsoft.Network/virtualNetworks/[^/]+$",
+      var.virtual_network_id
+    ))
+    error_message = "Provide a valid Azure virtual network resource ID."
+  }
+}

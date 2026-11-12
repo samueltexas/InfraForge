@@ -5,6 +5,9 @@ variables {
   location            = "westeurope"
   resource_group_name = "rg-infraforge-test"
   tenant_id           = "00000000-0000-0000-0000-000000000000"
+
+  private_endpoint_subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-infraforge-dev/providers/Microsoft.Network/virtualNetworks/vnet-infraforge-dev/subnets/private_endpoints"
+  virtual_network_id         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-infraforge-dev/providers/Microsoft.Network/virtualNetworks/vnet-infraforge-dev"
 }
 
 run "secure_keyvault_configuration" {

@@ -14,6 +14,11 @@ resource "azurerm_key_vault" "this" {
   # Private connectivity must be configured separately.
   public_network_access_enabled = false
 
+  network_acls {
+    default_action = "Deny"
+    bypass         = "None"
+  }
+
   # Protect the vault from accidental deletion and premature purging.
   soft_delete_retention_days = 90
   purge_protection_enabled   = true

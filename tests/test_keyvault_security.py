@@ -113,7 +113,7 @@ class KeyVaultSecurityTests(unittest.TestCase):
         )
 
     def test_example_uses_placeholder_tenant(self):
-        module = self.example["module"][0]["keyvault"]
+        module = next(module["keyvault"] for module in self.example["module"] if "keyvault" in module)
 
         self.assertEqual(
             module["tenant_id"],
@@ -121,7 +121,7 @@ class KeyVaultSecurityTests(unittest.TestCase):
         )
 
     def test_example_references_reusable_module(self):
-        module = self.example["module"][0]["keyvault"]
+        module = next(module["keyvault"] for module in self.example["module"] if "keyvault" in module)
 
         self.assertEqual(
             module["source"],
