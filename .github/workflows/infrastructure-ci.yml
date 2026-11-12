@@ -54,6 +54,14 @@ jobs:
         working-directory: examples/keyvault
         run: terraform validate -no-color
 
+      - name: Initialize Monitoring Terraform example
+        working-directory: examples/monitoring
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate Monitoring Terraform example
+        working-directory: examples/monitoring
+        run: terraform validate -no-color
+
   security-scanning:
     name: Checkov Security Scan
     runs-on: ubuntu-latest
@@ -106,6 +114,12 @@ jobs:
 
       - name: Lint Key Vault example
         run: tflint --chdir=examples/keyvault
+
+      - name: Lint Monitoring module
+        run: tflint --chdir=modules/monitoring
+
+      - name: Lint Monitoring example
+        run: tflint --chdir=examples/monitoring
 
   policy-validation:
     name: OPA Network Policy Tests
@@ -191,4 +205,30 @@ jobs:
 
       - name: Run Key Vault security tests
         working-directory: modules/keyvault
+        run: terraform test -no-color
+
+  monitoring-security:
+    name: Azure Monitoring Security Tests
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.0
+          terraform_wrapper: false
+
+      - name: Initialize Monitoring module
+        working-directory: modules/monitoring
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate Monitoring module
+        working-directory: modules/monitoring
+        run: terraform validate -no-color
+
+      - name: Run Monitoring security tests
+        working-directory: modules/monitoring
         run: terraform test -no-color
