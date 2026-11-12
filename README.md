@@ -89,6 +89,16 @@ verified through a live Azure deployment.
       Makefile
       README.md
 
+## Developer Workload Example
+
+The `examples/developer-workload` configuration demonstrates
+how application teams compose the four reusable infrastructure modules.
+
+It exposes application-ready outputs including subnet IDs,
+managed identity identifiers, Key Vault URI and monitoring resources.
+
+See [Developer Workload Documentation](docs/developer-workload/README.md).
+
 ## Deployment Policy
 
 **No Azure infrastructure is deployed by default.**

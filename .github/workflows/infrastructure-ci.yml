@@ -70,6 +70,14 @@ jobs:
         working-directory: examples/integrated
         run: terraform validate -no-color
 
+      - name: Initialize Developer Workload
+        working-directory: examples/developer-workload
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate Developer Workload
+        working-directory: examples/developer-workload
+        run: terraform validate -no-color
+
   security-scanning:
     name: Checkov Security Scan
     runs-on: ubuntu-latest
@@ -128,6 +136,9 @@ jobs:
 
       - name: Lint Monitoring example
         run: tflint --chdir=examples/monitoring
+
+      - name: Lint Developer Workload example
+        run: tflint --chdir=examples/developer-workload
 
   policy-validation:
     name: OPA Network Policy Tests
