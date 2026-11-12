@@ -79,3 +79,13 @@ jobs:
 
       - name: Lint networking example
         run: tflint --chdir=examples/networking
+  policy-validation:
+    name: OPA Network Policy Tests
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify network security policies
+        run: python3 scripts/test_network_policies.py
