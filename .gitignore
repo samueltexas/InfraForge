@@ -17,3 +17,10 @@ __pycache__/
 *.tf.backup
 *.pre-hardening.bak
 *.tf.bak
+
+# Local Python environments and cache
+.venv/
+*.pyc
+
+# Generated policy input
+/tests/policies/network/terraform-generated.json
