@@ -1,4 +1,4 @@
-# InfraForge — Architecture & Engineering Diagrams
+# Architecture Diagrams
 
 > Visual identity: Dark Cloud Engineering
 > Palette: Midnight Navy, Electric Cyan, Azure Blue and Ice White.
