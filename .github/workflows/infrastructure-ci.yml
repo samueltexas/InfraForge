@@ -78,7 +78,7 @@ jobs:
         run: tflint --chdir=modules/networking
 
       - name: Lint networking example
-        run: tflint --chdir=examples/networking\n
+        run: tflint --chdir=examples/networking
   policy-validation:
     name: OPA Network Policy Tests
     runs-on: ubuntu-24.04
