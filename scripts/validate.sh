@@ -54,6 +54,7 @@ DIRECTORIES=(
   examples/keyvault
   examples/monitoring
   examples/integrated
+  examples/developer-workload
 )
 
 for directory in "${DIRECTORIES[@]}"; do
