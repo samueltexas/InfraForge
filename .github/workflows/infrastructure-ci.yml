@@ -57,3 +57,25 @@ jobs:
       - name: Scan Terraform infrastructure
         run: |
           checkov             -d .             --framework terraform             --download-external-modules false             --compact             --quiet
+
+  tflint-validation:
+    name: TFLint Static Analysis
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.59.1
+
+      - name: Initialize TFLint
+        run: tflint --init
+
+      - name: Lint networking module
+        run: tflint --chdir=modules/networking
+
+      - name: Lint networking example
+        run: tflint --chdir=examples/networking
