@@ -1,0 +1,12 @@
+{
+  "security_rules": [
+    {
+      "name": "AllowPublicSSH",
+      "direction": "Inbound",
+      "access": "Allow",
+      "protocol": "Tcp",
+      "destination_port_range": "22",
+      "source_address_prefix": "0.0.0.0/0"
+    }
+  ]
+}

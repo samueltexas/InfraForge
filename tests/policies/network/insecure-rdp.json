@@ -1,0 +1,12 @@
+{
+  "security_rules": [
+    {
+      "name": "AllowPublicRDP",
+      "direction": "Inbound",
+      "access": "Allow",
+      "protocol": "Tcp",
+      "destination_port_range": "3389",
+      "source_address_prefix": "*"
+    }
+  ]
+}
