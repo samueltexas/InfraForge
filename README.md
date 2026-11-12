@@ -1,101 +1,114 @@
 # InfraForge
 
-**Azure Infrastructure as Code | Cloud Security | DevSecOps Automation**
+**Secure Azure Infrastructure as Code | Terraform | DevSecOps | Automated Testing**
 
-InfraForge is a modular Microsoft Azure infrastructure project built with
-Terraform and automated security validation.
+InfraForge is a modular Infrastructure as Code project demonstrating
+secure Azure infrastructure design, reusable Terraform modules,
+automated security controls and CI/CD validation.
 
-It demonstrates reusable infrastructure modules, secure cloud configuration,
-and automated CI/CD validation without requiring an Azure deployment.
+It is designed for local evaluation without provisioning Azure resources.
 
 ## Architecture
 
-Four Terraform modules are currently implemented:
+Four reusable Terraform modules are connected through an
+integrated example.
 
 | Module | Responsibilities |
 | --- | --- |
-| Networking | Virtual Networks, subnets, NSGs, inbound security rules |
-| Identity | Managed identities and scoped Azure RBAC |
-| Key Vault | Secrets access controls, private endpoints, private DNS |
-| Monitoring | Log Analytics, diagnostics, alerts, Azure Monitor Private Link |
+| Networking | Virtual networks, subnets, NSGs and ingress controls |
+| Identity | User-assigned managed identity and scoped RBAC |
+| Key Vault | RBAC, private endpoints, private DNS and purge protection |
+| Monitoring | Log Analytics, diagnostics, alerts and private link |
 
-The `examples/integrated` configuration connects these modules using
-Terraform outputs.
-
-See [Architecture Documentation](docs/architecture/README.md).
+- [Architecture documentation](docs/architecture/README.md)
+- [Architecture diagrams](docs/architecture/diagrams.md)
+- [Integrated example](examples/integrated/main.tf)
 
 ## Technology Stack
 
-- Microsoft Azure
-- Terraform
-- Docker
-- GitHub Actions
-- Checkov
-- TFLint
-- Open Policy Agent (OPA)
-- Python
-- HCL
+Terraform, Microsoft Azure, Docker, GitHub Actions,
+Python, Checkov, TFLint and Open Policy Agent.
+
+## Quick Start
+
+From the repository root, run:
+
+    ./scripts/validate.sh quick
+
+This runs the Python infrastructure tests.
+
+For Python tests, install the required Python dependencies,
+including python-hcl2.
+
+For complete Terraform configuration validation, start Docker
+Desktop and run:
+
+    ./scripts/validate.sh full
+
+Full validation uses Terraform 1.14.0 in Docker.
+
+Neither mode runs terraform apply or deploys Azure resources.
+
+## Testing and Reliability
+
+At the completion of Phase 7:
+
+- 89 Python tests passed.
+- Nine GitHub Actions checks passed.
+- Module contracts and integrated architecture were validated.
+- Security regression and negative tests were included.
+
+The CI pipeline also performs Terraform validation, Checkov,
+TFLint, OPA and module-specific security checks.
+
+- [Testing documentation](docs/testing/README.md)
+- [Engineering evidence](docs/evidence/README.md)
+- [Phase 7 Pull Request](https://github.com/samueltexas/InfraForge/pull/8)
+
+## Security
+
+The project demonstrates least-privilege RBAC, managed identities,
+private networking, Key Vault purge protection, restricted public
+access, NSGs and automated security validation.
+
+These are configuration-level controls. They have not been
+verified through a live Azure deployment.
 
 ## Repository Structure
 
-- `.github/workflows/` — CI/CD pipelines
-- `docs/architecture/` — architecture documentation
-- `examples/` — standalone and integrated Terraform examples
-- `modules/` — reusable Terraform modules
-- `policies/network/` — OPA security policies
-- `scripts/` — validation utilities
-- `tests/` — automated security and integration tests
-
-## Security Approach
-
-- Least-privilege Azure RBAC
-- User-assigned managed identities
-- Private endpoints and private DNS
-- Restricted public access
-- Network segmentation
-- Automated policy enforcement
-- Infrastructure security tests
-
-## CI/CD
-
-GitHub Actions contains eight validation jobs covering Terraform,
-Checkov, TFLint, OPA, and module-specific security checks.
-
-The integrated architecture is also included in Terraform validation.
-
-## Local Validation
-
-From the repository root, initialize the integrated example:
-
-    docker run --rm -v "$PWD:/workspace"       -w /workspace/examples/integrated       --entrypoint terraform hashicorp/terraform:1.14.0       init -backend=false -input=false -lockfile=readonly
-
-Validate the configuration:
-
-    docker run --rm -v "$PWD:/workspace"       -w /workspace/examples/integrated       --entrypoint terraform hashicorp/terraform:1.14.0       validate -no-color
-
-Run the Python test suite in an environment with `python-hcl2` installed:
-
-    python -m unittest discover -s tests -p 'test_*.py' -v
+    InfraForge/
+      .github/workflows/
+      docs/architecture/
+      docs/evidence/
+      docs/testing/
+      examples/
+      modules/
+      policies/network/
+      scripts/
+      tests/
+      Makefile
+      README.md
 
 ## Deployment Policy
 
-**No Azure resources are deployed by default.**
+**No Azure infrastructure is deployed by default.**
 
-Examples use placeholder subscription and tenant identifiers.
-
-A real deployment requires authorization, valid Azure configuration,
-security review, connectivity verification, and cost assessment.
+A real deployment requires authorization, valid cloud configuration,
+security review, network verification and cost assessment.
 
 ## Project Status
 
-- Networking — implemented
-- DevSecOps CI/CD — implemented
-- Identity and Access Management — implemented
-- Key Vault and Secrets Management — implemented
-- Monitoring and Observability — implemented
-- Integrated architecture — locally validated
-- Live Azure deployment — not performed
+| Component | Status |
+| --- | --- |
+| Networking | Implemented and locally validated |
+| Identity | Implemented and locally validated |
+| Key Vault | Implemented and locally validated |
+| Monitoring | Implemented and locally validated |
+| Integrated architecture | Locally validated |
+| Python tests | 89 passed at Phase 7 |
+| GitHub Actions | Nine checks passed at Phase 7 |
+| Live Azure deployment | Not performed |
 
 ## Author
 
-Samuel Texa
+**Samuel Texa**
