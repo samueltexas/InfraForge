@@ -14,6 +14,19 @@ provider "azurerm" {
   subscription_id = "00000000-0000-0000-0000-000000000000"
 }
 
+variable "management_sources" {
+  description = "Optional authorized external SSH management sources."
+
+  type = map(object({
+    source_type        = string
+    source_prefix      = string
+    destination_subnet = string
+    priority           = number
+  }))
+
+  default = {}
+}
+
 module "networking" {
   source = "../../modules/networking"
 
@@ -26,12 +39,6 @@ module "networking" {
 
   # Explicit inbound exceptions; all other inbound traffic is denied.
   security_rules = {
-    AllowManagementSSH = {
-      destination_subnet = "application"
-      source_prefix      = "10.10.3.0/24"
-      destination_port   = "22"
-      priority           = 100
-    }
 
     AllowApplicationPostgres = {
       destination_subnet = "database"
@@ -40,6 +47,9 @@ module "networking" {
       priority           = 100
     }
   }
+
+  # Explicit external and VPN administrative access.
+  management_sources = var.management_sources
 
   subnets = {
     application = ["10.10.1.0/24"]

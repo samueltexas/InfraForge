@@ -15,6 +15,23 @@ resource "azurerm_network_security_rule" "allow_inbound" {
   network_security_group_name = azurerm_network_security_group.subnet[each.value.destination_subnet].name
 }
 
+# Explicit SSH access from authorized management sources.
+resource "azurerm_network_security_rule" "allow_management_ssh" {
+  for_each = var.management_sources
+
+  name                        = "AllowManagementSSH-${each.key}"
+  priority                    = each.value.priority
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "22"
+  source_address_prefix       = each.value.source_prefix
+  destination_address_prefix  = "*"
+  resource_group_name         = var.resource_group_name
+  network_security_group_name = azurerm_network_security_group.subnet["application"].name
+}
+
 # Override Azure's default AllowVNetInBound rule.
 # Exceptions must have a lower priority number.
 resource "azurerm_network_security_rule" "deny_inbound" {

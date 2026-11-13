@@ -56,6 +56,7 @@ def validate_module_template():
 
     allowed = get_resource(configuration, "allow_inbound")
     denied = get_resource(configuration, "deny_inbound")
+    management = get_resource(configuration, "allow_management_ssh")
 
     expected_allowed = {
         "for_each": "${var.security_rules}",
@@ -121,7 +122,131 @@ def validate_module_template():
         "Unexpected deny rule port or destination mapping.",
     )
 
+    expected_management = {
+        "for_each": "${var.management_sources}",
+        "direction": "Inbound",
+        "access": "Allow",
+        "protocol": "Tcp",
+        "source_address_prefix": "${each.value.source_prefix}",
+        "destination_port_range": "22",
+        "priority": "${each.value.priority}",
+        "network_security_group_name": (
+            "${azurerm_network_security_group.subnet"
+            '["application"].name}'
+        ),
+    }
+
+    for attribute, expected in expected_management.items():
+        require(
+            management.get(attribute) == expected,
+            f"Unexpected allow_management_ssh.{attribute}: "
+            f"{management.get(attribute)!r}",
+        )
+
+    require(
+        management.get("resource_group_name")
+        == "${var.resource_group_name}",
+        "Unexpected management SSH resource group mapping.",
+    )
+
+    require(
+        management.get("source_port_range") == "*"
+        and management.get("destination_address_prefix") == "*",
+        "Unexpected management SSH port or destination mapping.",
+    )
+
     print("PASS: Terraform security resource mappings")
+    print("PASS: Terraform management SSH resource mappings")
+
+
+
+
+def validate_management_sources(sources, subnets, security_rules):
+    """Validate external administrator and private VPN SSH sources."""
+
+    require(isinstance(sources, dict), "Management sources must be a map.")
+
+    reserved_ranges = [
+        ipaddress.ip_network("10.0.0.0/8"),
+        ipaddress.ip_network("172.16.0.0/12"),
+        ipaddress.ip_network("192.168.0.0/16"),
+    ]
+
+    used_priorities = {
+        (rule["destination_subnet"], rule["priority"])
+        for rule in security_rules.values()
+    }
+
+    for name, source in sources.items():
+        require(isinstance(source, dict), f"Invalid management source: {name}")
+
+        required_fields = {
+            "source_type",
+            "source_prefix",
+            "destination_subnet",
+            "priority",
+        }
+
+        require(
+            set(source) == required_fields,
+            f"Unexpected management source fields: {name}",
+        )
+
+        require(
+            source["destination_subnet"] == "application"
+            and "application" in subnets,
+            f"Management SSH must target the application subnet: {name}",
+        )
+
+        require(
+            source["source_type"] in {"public_ipv4", "private_vpn"},
+            f"Unsupported management source type: {name}",
+        )
+
+        network = ipaddress.ip_network(
+            source["source_prefix"],
+            strict=True,
+        )
+
+        require(network.version == 4, f"IPv4 is required: {name}")
+
+        priority = source["priority"]
+
+        require(
+            type(priority) is int and 100 <= priority < 4000,
+            f"Invalid management priority: {name}",
+        )
+
+        priority_key = (source["destination_subnet"], priority)
+
+        require(
+            priority_key not in used_priorities,
+            f"Duplicate NSG priority: {name}",
+        )
+
+        used_priorities.add(priority_key)
+
+        if source["source_type"] == "public_ipv4":
+            require(
+                network.prefixlen == 32,
+                f"Public management sources must use /32: {name}",
+            )
+
+            require(
+                network.network_address.is_global,
+                f"Public management source must be globally routable: {name}",
+            )
+
+        else:
+            require(
+                any(
+                    network.subnet_of(private_range)
+                    for private_range in reserved_ranges
+                ),
+                f"VPN source must belong to an RFC1918 range: {name}",
+            )
+
+    print(f"PASS: {len(sources)} management sources validated")
 
 
 def validate_example():
@@ -231,6 +356,15 @@ def validate_example():
             "destination_port_range": port_text,
             "source_address_prefix": str(source),
         })
+
+    management_sources = networking.get("management_sources")
+
+    if isinstance(management_sources, dict):
+        validate_management_sources(
+            management_sources,
+            subnets,
+            rules,
+        )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(
