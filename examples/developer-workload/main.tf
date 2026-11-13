@@ -116,3 +116,23 @@ module "monitoring" {
 
   tags = local.tags
 }
+
+# Deploy a private Linux application virtual machine.
+module "compute" {
+  source = "../../modules/compute"
+
+  vm_name             = "vm-infraforge-workload-dev"
+  location            = local.location
+  resource_group_name = module.resource_group.name
+
+  subnet_id           = module.networking.subnet_ids["application"]
+  managed_identity_id = module.identity.identity_id
+
+  admin_username       = var.admin_username
+  admin_ssh_public_key = var.admin_ssh_public_key
+
+  vm_size         = "Standard_B2s"
+  os_disk_size_gb = 64
+
+  tags = local.tags
+}
