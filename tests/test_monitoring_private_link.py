@@ -83,15 +83,52 @@ class MonitoringPrivateLinkTests(unittest.TestCase):
             "azurerm_private_dns_zone",
         )
 
+        # Terraform uses one resource block with five for_each instances.
         self.assertEqual(len(zones), 1)
 
-        source = (ROOT / "modules/monitoring/private_link.tf").read_text(
-            encoding="utf-8"
+        source = (
+            ROOT / "modules/monitoring/private_link.tf"
+        ).read_text(encoding="utf-8")
+
+        expected_zones = {
+            "privatelink.monitor.azure.com",
+            "privatelink.oms.opinsights.azure.com",
+            "privatelink.ods.opinsights.azure.com",
+            "privatelink.agentsvc.azure-automation.net",
+            "privatelink.blob.core.windows.net",
+        }
+
+        for zone in expected_zones:
+            with self.subTest(zone=zone):
+                self.assertIn(f'"{zone}"', source)
+
+        self.assertIn(
+            "for_each = local.monitoring_private_dns_zones",
+            source,
         )
 
-        self.assertIn("privatelink.monitor.azure.com", source)
-        self.assertIn("privatelink.oms.opinsights.azure.com", source)
-        self.assertIn("privatelink.ods.opinsights.azure.com", source)
+    def test_dns_links_cover_all_private_dns_zones(self):
+        links = resources(
+            self.private_link,
+            "azurerm_private_dns_zone_virtual_network_link",
+        )
+
+        # One resource block dynamically creates a link per DNS zone.
+        self.assertEqual(len(links), 1)
+
+        source = (
+            ROOT / "modules/monitoring/private_link.tf"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "for_each = azurerm_private_dns_zone.monitoring",
+            source,
+        )
+
+        self.assertRegex(
+            source,
+            r"virtual_network_id\s*=\s*var\.virtual_network_id",
+        )
 
     def test_dns_links_use_explicit_virtual_network(self):
         links = resources(

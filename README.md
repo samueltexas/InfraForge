@@ -115,10 +115,17 @@ security review, network verification and cost assessment.
 | Key Vault | Implemented and locally validated |
 | Monitoring | Implemented and locally validated |
 | Integrated architecture | Locally validated |
-| Python tests | 89 passed at Phase 7 |
+| Python tests | 107 passed |
 | GitHub Actions | Nine checks passed at Phase 7 |
 | Live Azure deployment | Not performed |
 
 ## Author
 
 **Samuel Texa**
+
+## License
+
+This project is licensed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Samuel Texa

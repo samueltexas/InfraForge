@@ -6,6 +6,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+
+from scripts.validate_terraform_network import validate_management_sources
 from pathlib import Path
 
 
@@ -62,20 +64,113 @@ class TerraformNetworkSecurityTests(unittest.TestCase):
             result.stdout + result.stderr,
         )
 
-    def test_public_ssh_is_rejected(self):
-        self.replace(
-            "examples/networking/main.tf",
-            'source_prefix      = "10.10.3.0/24"',
-            'source_prefix      = "0.0.0.0/0"',
+    def test_public_admin_ipv4_is_accepted(self):
+        validate_management_sources(
+            {
+                "public_admin": {
+                    "source_type": "public_ipv4",
+                    "source_prefix": "8.8.8.8/32",
+                    "destination_subnet": "application",
+                    "priority": 110,
+                }
+            },
+            {"application": [], "database": []},
+            {},
         )
 
-        result = self.validate()
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn(
-            "Source must belong to a managed subnet",
-            result.stderr,
+    def test_private_vpn_source_is_accepted(self):
+        validate_management_sources(
+            {
+                "corporate_vpn": {
+                    "source_type": "private_vpn",
+                    "source_prefix": "10.20.0.0/24",
+                    "destination_subnet": "application",
+                    "priority": 120,
+                }
+            },
+            {"application": [], "database": []},
+            {},
         )
+
+    def test_management_ssh_cannot_target_database_subnet(self):
+        with self.assertRaisesRegex(ValueError, "application subnet"):
+            validate_management_sources(
+                {
+                    "public_admin": {
+                        "source_type": "public_ipv4",
+                        "source_prefix": "8.8.8.8/32",
+                        "destination_subnet": "database",
+                        "priority": 110,
+                    }
+                },
+                {"application": [], "database": []},
+                {},
+            )
+
+    def test_public_ssh_cidr_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "/32"):
+            validate_management_sources(
+                {
+                    "public_admin": {
+                        "source_type": "public_ipv4",
+                        "source_prefix": "8.8.8.0/24",
+                        "destination_subnet": "application",
+                        "priority": 110,
+                    }
+                },
+                {"application": []},
+                {},
+            )
+
+    def test_unrestricted_ssh_source_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "/32"):
+            validate_management_sources(
+                {
+                    "public_admin": {
+                        "source_type": "public_ipv4",
+                        "source_prefix": "0.0.0.0/0",
+                        "destination_subnet": "application",
+                        "priority": 110,
+                    }
+                },
+                {"application": []},
+                {},
+            )
+
+    def test_public_address_cannot_be_declared_as_vpn(self):
+        with self.assertRaisesRegex(ValueError, "RFC1918"):
+            validate_management_sources(
+                {
+                    "corporate_vpn": {
+                        "source_type": "private_vpn",
+                        "source_prefix": "8.8.8.0/24",
+                        "destination_subnet": "application",
+                        "priority": 120,
+                    }
+                },
+                {"application": []},
+                {},
+            )
+
+    def test_management_priority_must_be_unique(self):
+        with self.assertRaisesRegex(ValueError, "Duplicate NSG priority"):
+            validate_management_sources(
+                {
+                    "public_admin": {
+                        "source_type": "public_ipv4",
+                        "source_prefix": "8.8.8.8/32",
+                        "destination_subnet": "application",
+                        "priority": 100,
+                    }
+                },
+                {"application": []},
+                {
+                    "AllowApplicationPostgres": {
+                        "destination_subnet": "application",
+                        "priority": 100,
+                    }
+                },
+            )
 
     def test_modified_allow_rule_mapping_is_rejected(self):
         self.replace(
@@ -89,6 +184,22 @@ class TerraformNetworkSecurityTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn(
             "Unexpected allow_inbound.source_address_prefix",
+            result.stderr,
+        )
+
+
+    def test_modified_management_ssh_port_is_rejected(self):
+        self.replace(
+            "modules/networking/security_rules.tf",
+            'destination_port_range      = "22"',
+            'destination_port_range      = "2222"',
+        )
+
+        result = self.validate()
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            "Unexpected allow_management_ssh.destination_port_range",
             result.stderr,
         )
 

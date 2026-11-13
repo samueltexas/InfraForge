@@ -19,6 +19,7 @@ MODULES = {
             "subnets",
             "tags",
             "security_rules",
+            "management_sources",
         },
         "outputs": {"vnet_id", "subnet_ids"},
     },
