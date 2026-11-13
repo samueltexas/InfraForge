@@ -19,8 +19,7 @@ provider "azurerm" {
 }
 
 locals {
-  resource_group_name = "rg-infraforge-dev"
-  location            = "westeurope"
+  location = "westeurope"
 
   tags = {
     project     = "InfraForge"
@@ -29,11 +28,19 @@ locals {
   }
 }
 
+# Create the shared Azure Resource Group.
+module "resource_group" {
+  source   = "../../modules/resource-group"
+  name     = "rg-infraforge-dev"
+  location = local.location
+  tags     = local.tags
+}
+
 # Provide a shared network for private Azure service connectivity.
 module "networking" {
   source = "../../modules/networking"
 
-  resource_group_name = local.resource_group_name
+  resource_group_name = module.resource_group.name
   location            = local.location
   vnet_name           = "vnet-infraforge-workload-dev"
 
@@ -57,7 +64,7 @@ module "identity" {
 
   name                = "id-infraforge-workload-dev"
   location            = local.location
-  resource_group_name = local.resource_group_name
+  resource_group_name = module.resource_group.name
 
   role_assignments = {}
 
@@ -70,7 +77,7 @@ module "keyvault" {
 
   name                = "kv-infraforge-workload"
   location            = local.location
-  resource_group_name = local.resource_group_name
+  resource_group_name = module.resource_group.name
 
   # Placeholder tenant ID for local validation only.
   tenant_id = "00000000-0000-0000-0000-000000000000"
@@ -91,7 +98,7 @@ module "monitoring" {
 
   workspace_name      = "law-infraforge-workload-dev"
   location            = local.location
-  resource_group_name = local.resource_group_name
+  resource_group_name = module.resource_group.name
 
   diagnostic_target_id = module.keyvault.key_vault_id
 

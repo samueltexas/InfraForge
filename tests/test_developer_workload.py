@@ -13,11 +13,31 @@ class DeveloperWorkloadTests(unittest.TestCase):
         cls.main = (EXAMPLE / "main.tf").read_text()
         cls.outputs = (EXAMPLE / "outputs.tf").read_text()
 
-    def test_all_four_reusable_modules_are_consumed(self):
-        for module in ("networking", "identity", "keyvault", "monitoring"):
-            with self.subTest(module=module):
-                self.assertIn(f'module "{module}"', self.main)
-                self.assertIn(f"../../modules/{module}", self.main)
+    def test_all_five_reusable_modules_are_consumed(self):
+        modules = {
+            "resource_group": "resource-group",
+            "networking": "networking",
+            "identity": "identity",
+            "keyvault": "keyvault",
+            "monitoring": "monitoring",
+        }
+
+        for name, directory in modules.items():
+            with self.subTest(module=name):
+                self.assertIn(f'module "{name}"', self.main)
+                self.assertIn(
+                    f"../../modules/{directory}",
+                    self.main,
+                )
+
+    def test_workload_modules_use_resource_group_output(self):
+        self.assertEqual(
+            self.main.count(
+                "resource_group_name = module.resource_group.name"
+            ),
+            4,
+        )
+
 
     def test_application_subnet_is_exposed(self):
         self.assertIn('output "application_subnet_id"', self.outputs)
