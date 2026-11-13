@@ -29,11 +29,19 @@ locals {
 }
 
 # Provide a shared network for private Azure service connectivity.
+# Create the shared Azure Resource Group.
+module "resource_group" {
+  source   = "../../modules/resource-group"
+  name     = local.resource_group_name
+  location = local.location
+  tags     = local.tags
+}
+
 module "networking" {
   source = "../../modules/networking"
 
-  resource_group_name = local.resource_group_name
-  location            = local.location
+  resource_group_name = module.resource_group.name
+  location            = module.resource_group.location
   vnet_name           = "vnet-infraforge-integrated-dev"
 
   address_space = ["10.20.0.0/16"]
@@ -55,8 +63,8 @@ module "identity" {
   source = "../../modules/identity"
 
   name                = "id-infraforge-integrated-dev"
-  location            = local.location
-  resource_group_name = local.resource_group_name
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
 
   role_assignments = {}
 
@@ -68,8 +76,8 @@ module "keyvault" {
   source = "../../modules/keyvault"
 
   name                = "kv-infraforge-int-dev"
-  location            = local.location
-  resource_group_name = local.resource_group_name
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
 
   # Placeholder tenant ID for local validation only.
   tenant_id = "00000000-0000-0000-0000-000000000000"
@@ -89,8 +97,8 @@ module "monitoring" {
   source = "../../modules/monitoring"
 
   workspace_name      = "law-infraforge-integrated-dev"
-  location            = local.location
-  resource_group_name = local.resource_group_name
+  location            = module.resource_group.location
+  resource_group_name = module.resource_group.name
 
   diagnostic_target_id = module.keyvault.key_vault_id
 

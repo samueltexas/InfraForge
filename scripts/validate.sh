@@ -45,6 +45,7 @@ echo "=== TERRAFORM FORMAT ==="
 terraform_run . fmt -check -recursive -no-color
 
 DIRECTORIES=(
+  modules/resource-group
   modules/networking
   modules/identity
   modules/keyvault
