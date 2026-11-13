@@ -51,6 +51,7 @@ DIRECTORIES=(
   modules/keyvault
   modules/monitoring
   modules/compute
+  modules/storage
   examples/networking
   examples/identity
   examples/keyvault
@@ -67,5 +68,7 @@ done
 
 echo "=== RUNNING COMPUTE SECURITY TESTS ==="
 terraform_run modules/compute test -no-color
+echo "=== RUNNING STORAGE SECURITY TESTS ==="
+terraform_run modules/storage test -no-color
 
 echo "Full validation passed."

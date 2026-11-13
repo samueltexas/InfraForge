@@ -111,6 +111,29 @@ MODULES = {
             "monitoring_private_endpoint_id",
         },
     },
+    "storage": {
+        "inputs": {
+            "storage_account_name",
+            "resource_group_name",
+            "location",
+            "private_endpoint_subnet_id",
+            "virtual_network_id",
+            "containers",
+            "blob_soft_delete_retention_days",
+            "container_soft_delete_retention_days",
+            "tags",
+        },
+        "outputs": {
+            "storage_account_id",
+            "storage_account_name",
+            "primary_blob_endpoint",
+            "container_ids",
+            "private_endpoint_id",
+            "private_dns_zone_id",
+            "private_dns_zone_name",
+        },
+    },
+
 }
 
 
@@ -210,6 +233,7 @@ class InfrastructureContractTests(unittest.TestCase):
             "identity",
             "keyvault",
             "monitoring",
+            "storage",
         }
         self.assertEqual(set(modules), expected_modules)
 
