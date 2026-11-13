@@ -50,6 +50,7 @@ DIRECTORIES=(
   modules/identity
   modules/keyvault
   modules/monitoring
+  modules/compute
   examples/networking
   examples/identity
   examples/keyvault
@@ -63,5 +64,8 @@ for directory in "${DIRECTORIES[@]}"; do
   terraform_run "$directory" init     -backend=false -input=false -lockfile=readonly -no-color
   terraform_run "$directory" validate -no-color
 done
+
+echo "=== RUNNING COMPUTE SECURITY TESTS ==="
+terraform_run modules/compute test -no-color
 
 echo "Full validation passed."

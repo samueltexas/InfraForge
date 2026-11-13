@@ -37,3 +37,23 @@ output "key_vault_uri" {
   description = "Key Vault URI for application configuration."
   value       = module.keyvault.key_vault_uri
 }
+
+output "virtual_machine_id" {
+  description = "Resource ID of the application virtual machine."
+  value       = module.compute.id
+}
+
+output "virtual_machine_name" {
+  description = "Name of the application virtual machine."
+  value       = module.compute.name
+}
+
+output "virtual_machine_private_ip" {
+  description = "Private IP address of the application virtual machine."
+  value       = module.compute.private_ip_address
+}
+
+output "virtual_machine_network_interface_id" {
+  description = "Resource ID of the VM network interface."
+  value       = module.compute.network_interface_id
+}

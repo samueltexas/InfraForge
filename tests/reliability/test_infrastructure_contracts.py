@@ -27,6 +27,27 @@ MODULES = {
         },
         "outputs": {"vnet_id", "subnet_ids"},
     },
+    "compute": {
+        "inputs": {
+            "vm_name",
+            "location",
+            "resource_group_name",
+            "subnet_id",
+            "managed_identity_id",
+            "admin_username",
+            "admin_ssh_public_key",
+            "vm_size",
+            "os_disk_size_gb",
+            "tags",
+        },
+        "outputs": {
+            "id",
+            "name",
+            "private_ip_address",
+            "network_interface_id",
+            "managed_identity_id",
+        },
+    },
     "identity": {
         "inputs": {
             "name",
@@ -183,7 +204,14 @@ class InfrastructureContractTests(unittest.TestCase):
         modules = collect_blocks(
             load_integrated_configuration(), "module"
         )
-        self.assertEqual(set(modules), set(MODULES))
+        expected_modules = {
+            "resource_group",
+            "networking",
+            "identity",
+            "keyvault",
+            "monitoring",
+        }
+        self.assertEqual(set(modules), expected_modules)
 
     def test_integrated_module_sources_are_local(self):
         modules = collect_blocks(

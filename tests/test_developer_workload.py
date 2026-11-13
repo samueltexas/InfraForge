@@ -10,34 +10,54 @@ class DeveloperWorkloadTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.main = (EXAMPLE / "main.tf").read_text()
-        cls.outputs = (EXAMPLE / "outputs.tf").read_text()
+        cls.main = (EXAMPLE / "main.tf").read_text(encoding="utf-8")
+        cls.outputs = (EXAMPLE / "outputs.tf").read_text(encoding="utf-8")
+        cls.variables = (EXAMPLE / "variables.tf").read_text(encoding="utf-8")
 
-    def test_all_five_reusable_modules_are_consumed(self):
+    def test_all_six_reusable_modules_are_consumed(self):
         modules = {
             "resource_group": "resource-group",
             "networking": "networking",
             "identity": "identity",
             "keyvault": "keyvault",
             "monitoring": "monitoring",
+            "compute": "compute",
         }
 
         for name, directory in modules.items():
             with self.subTest(module=name):
                 self.assertIn(f'module "{name}"', self.main)
-                self.assertIn(
-                    f"../../modules/{directory}",
-                    self.main,
-                )
+                self.assertIn(f"../../modules/{directory}", self.main)
 
-    def test_workload_modules_use_resource_group_output(self):
+    def test_workload_modules_use_shared_resource_group(self):
         self.assertEqual(
             self.main.count(
                 "resource_group_name = module.resource_group.name"
             ),
-            4,
+            5,
         )
 
+    def test_compute_uses_application_subnet(self):
+        self.assertIn(
+            'module.networking.subnet_ids["application"]',
+            self.main,
+        )
+
+    def test_compute_uses_existing_managed_identity(self):
+        self.assertIn(
+            "module.identity.identity_id",
+            self.main,
+        )
+
+    def test_compute_uses_ssh_public_key_variable(self):
+        self.assertIn(
+            "admin_ssh_public_key = var.admin_ssh_public_key",
+            self.main,
+        )
+        self.assertIn(
+            'variable "admin_ssh_public_key"',
+            self.variables,
+        )
 
     def test_application_subnet_is_exposed(self):
         self.assertIn('output "application_subnet_id"', self.outputs)
@@ -69,6 +89,18 @@ class DeveloperWorkloadTests(unittest.TestCase):
             'output "monitoring_private_link_scope_id"',
             self.outputs,
         )
+
+    def test_compute_outputs_are_exposed(self):
+        expected_outputs = [
+            "virtual_machine_id",
+            "virtual_machine_name",
+            "virtual_machine_private_ip",
+            "virtual_machine_network_interface_id",
+        ]
+
+        for output in expected_outputs:
+            with self.subTest(output=output):
+                self.assertIn(f'output "{output}"', self.outputs)
 
     def test_private_endpoint_subnet_is_connected(self):
         self.assertIn(
