@@ -78,6 +78,14 @@ jobs:
         working-directory: examples/developer-workload
         run: terraform validate -no-color
 
+      - name: Initialize Resource Group module
+        working-directory: modules/resource-group
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate Resource Group module
+        working-directory: modules/resource-group
+        run: terraform validate -no-color
+
   security-scanning:
     name: Checkov Security Scan
     runs-on: ubuntu-latest
@@ -139,6 +147,9 @@ jobs:
 
       - name: Lint Developer Workload example
         run: tflint --chdir=examples/developer-workload
+
+      - name: Lint Resource Group module
+        run: tflint --chdir=modules/resource-group
 
   policy-validation:
     name: OPA Network Policy Tests
@@ -271,3 +282,33 @@ jobs:
 
       - name: Run complete infrastructure test suite
         run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+
+  resource-group-security:
+    name: Azure Resource Group Security Tests
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.0
+          terraform_wrapper: false
+
+      - name: Initialize Resource Group module
+        working-directory: modules/resource-group
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate Resource Group module
+        working-directory: modules/resource-group
+        run: terraform validate -no-color
+
+      - name: Run Resource Group tests
+        working-directory: modules/resource-group
+        run: terraform test -no-color

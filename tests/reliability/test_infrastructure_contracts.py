@@ -10,6 +10,10 @@ import hcl2
 ROOT = Path(__file__).resolve().parents[2]
 
 MODULES = {
+    "resource_group": {
+        "inputs": {"name", "location", "tags"},
+        "outputs": {"id", "name", "location"},
+    },
     "networking": {
         "inputs": {
             "resource_group_name",
@@ -90,6 +94,12 @@ MODULES = {
 
 
 
+
+def module_directory(name):
+    """Resolve a logical module name to its physical directory."""
+    return name.replace("_", "-")
+
+
 def read_declarations(directory, kind):
     """Extract Terraform variable and output declarations."""
     filename = {
@@ -138,14 +148,14 @@ class InfrastructureContractTests(unittest.TestCase):
         for module_name in MODULES:
             with self.subTest(module=module_name):
                 self.assertTrue(
-                    (ROOT / "modules" / module_name).is_dir()
+                    (ROOT / "modules" / module_directory(module_name)).is_dir()
                 )
 
     def test_module_inputs_match_contract(self):
         for module_name, contract in MODULES.items():
             with self.subTest(module=module_name):
                 actual = read_declarations(
-                    ROOT / "modules" / module_name,
+                    ROOT / "modules" / module_directory(module_name),
                     "variable",
                 )
                 self.assertEqual(actual, contract["inputs"])
@@ -154,7 +164,7 @@ class InfrastructureContractTests(unittest.TestCase):
         for module_name, contract in MODULES.items():
             with self.subTest(module=module_name):
                 actual = read_declarations(
-                    ROOT / "modules" / module_name,
+                    ROOT / "modules" / module_directory(module_name),
                     "output",
                 )
                 self.assertEqual(actual, contract["outputs"])
@@ -162,7 +172,7 @@ class InfrastructureContractTests(unittest.TestCase):
     def test_all_modules_have_provider_constraints(self):
         for module_name in MODULES:
             with self.subTest(module=module_name):
-                path = ROOT / "modules" / module_name / "versions.tf"
+                path = ROOT / "modules" / module_directory(module_name) / "versions.tf"
                 self.assertTrue(path.is_file())
 
                 content = path.read_text(encoding="utf-8")
@@ -184,7 +194,7 @@ class InfrastructureContractTests(unittest.TestCase):
             with self.subTest(module=name):
                 self.assertEqual(
                     configuration["source"],
-                    f"../../modules/{name}",
+                    f"../../modules/{name.replace('_', '-')}",
                 )
 
     def test_integrated_module_arguments_exist_in_contract(self):
@@ -220,14 +230,14 @@ class InfrastructureContractTests(unittest.TestCase):
         for module_name in MODULES:
             with self.subTest(module=module_name):
                 content = (
-                    ROOT / "modules" / module_name / "outputs.tf"
+                    ROOT / "modules" / module_directory(module_name) / "outputs.tf"
                 ).read_text(encoding="utf-8")
 
                 self.assertIn("value", content)
 
                 self.assertEqual(
                     read_declarations(
-                        ROOT / "modules" / module_name, "output"
+                        ROOT / "modules" / module_directory(module_name), "output"
                     ),
                     MODULES[module_name]["outputs"],
                 )

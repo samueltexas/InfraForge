@@ -33,14 +33,14 @@ class IntegratedArchitectureTests(unittest.TestCase):
     def test_required_modules_exist(self):
         self.assertEqual(
             set(self.modules),
-            {"networking", "identity", "keyvault", "monitoring"},
+            {"resource_group", "networking", "identity", "keyvault", "monitoring"},
         )
 
     def test_modules_use_local_sources(self):
         for name in self.modules:
             self.assertEqual(
                 self.modules[name]["source"],
-                f"../../modules/{name}",
+                f"../../modules/{name.replace('_', '-')}",
             )
 
     def test_keyvault_uses_networking_outputs(self):
