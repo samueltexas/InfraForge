@@ -9,7 +9,7 @@ Azure deployment.
 
 ## 1. Azure Infrastructure Architecture
 
-The integrated architecture connects four reusable Terraform modules.
+The integrated architecture connects five reusable Terraform modules, including a shared Resource Group foundation.
 Networking provides connectivity, Identity provides managed access,
 Key Vault protects application secrets, and Monitoring provides
 diagnostics and observability.
@@ -157,6 +157,7 @@ outputs exposed by InfraForge's reusable Terraform modules.
 %%{init: {"theme":"base","themeVariables":{"background":"#071426","primaryColor":"#102B46","primaryTextColor":"#F2F7FC","primaryBorderColor":"#00D5F5","lineColor":"#00C9E8","secondaryColor":"#123653","tertiaryColor":"#0B2038","fontFamily":"Inter, Arial","fontSize":"14px"}}}%%
 flowchart TB
     subgraph PLATFORM["INFRAFORGE · REUSABLE MODULES"]
+        RG["Resource Group Module"]
         NET["Networking Module"]
         IAM["Identity Module"]
         KV["Key Vault Module"]
@@ -177,6 +178,10 @@ flowchart TB
         OBS["Logs and Diagnostics"]
     end
 
+    RG --> NET
+    RG --> IAM
+    RG --> KV
+    RG --> MON
     NET --> SUBNET
     IAM --> CLIENT
     KV --> VAULT
