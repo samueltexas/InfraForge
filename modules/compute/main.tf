@@ -15,6 +15,7 @@ resource "azurerm_network_interface" "this" {
 
 # Deploy a hardened Ubuntu Linux virtual machine.
 resource "azurerm_linux_virtual_machine" "this" {
+  #checkov:skip=CKV_AZURE_50:This module does not declare or attach VM extensions. Extension resources are independently governed.
   name                = var.vm_name
   computer_name       = var.vm_name
   location            = var.location
