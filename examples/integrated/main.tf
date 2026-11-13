@@ -116,3 +116,27 @@ module "monitoring" {
 
   tags = local.tags
 }
+
+
+# Store application data using private Blob Storage.
+module "storage" {
+  source = "../../modules/storage"
+
+  storage_account_name = "stinfraforgeint01"
+  resource_group_name  = module.resource_group.name
+  location             = local.location
+
+  private_endpoint_subnet_id = module.networking.subnet_ids["private-endpoints"]
+  virtual_network_id         = module.networking.vnet_id
+
+  containers = [
+    "application-data",
+    "backup-data",
+    "audit-logs"
+  ]
+
+  blob_soft_delete_retention_days      = 14
+  container_soft_delete_retention_days = 14
+
+  tags = local.tags
+}

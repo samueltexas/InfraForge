@@ -1,3 +1,4 @@
+import re
 import unittest
 from pathlib import Path
 
@@ -14,7 +15,7 @@ class DeveloperWorkloadTests(unittest.TestCase):
         cls.outputs = (EXAMPLE / "outputs.tf").read_text(encoding="utf-8")
         cls.variables = (EXAMPLE / "variables.tf").read_text(encoding="utf-8")
 
-    def test_all_six_reusable_modules_are_consumed(self):
+    def test_all_seven_reusable_modules_are_consumed(self):
         modules = {
             "resource_group": "resource-group",
             "networking": "networking",
@@ -22,6 +23,7 @@ class DeveloperWorkloadTests(unittest.TestCase):
             "keyvault": "keyvault",
             "monitoring": "monitoring",
             "compute": "compute",
+            "storage": "storage",
         }
 
         for name, directory in modules.items():
@@ -30,12 +32,11 @@ class DeveloperWorkloadTests(unittest.TestCase):
                 self.assertIn(f"../../modules/{directory}", self.main)
 
     def test_workload_modules_use_shared_resource_group(self):
-        self.assertEqual(
-            self.main.count(
-                "resource_group_name = module.resource_group.name"
-            ),
-            5,
+        references = re.findall(
+            r"resource_group_name\s*=\s*module\.resource_group\.name",
+            self.main
         )
+        self.assertEqual(len(references), 6)
 
     def test_compute_uses_application_subnet(self):
         self.assertIn(
@@ -116,6 +117,44 @@ class DeveloperWorkloadTests(unittest.TestCase):
             "00000000-0000-0000-0000-000000000000",
             self.main,
         )
+
+
+    def test_storage_uses_private_endpoint_subnet(self):
+        self.assertIn(
+            'private_endpoint_subnet_id = module.networking.subnet_ids["private-endpoints"]',
+            self.main,
+        )
+
+    def test_storage_uses_existing_virtual_network(self):
+        self.assertRegex(
+            self.main,
+            r"virtual_network_id\s*=\s*module\.networking\.vnet_id"
+        )
+
+    def test_storage_uses_existing_resource_group(self):
+        self.assertIn(
+            'module "storage"',
+            self.main,
+        )
+        self.assertIn(
+            "resource_group_name  = module.resource_group.name",
+            self.main,
+        )
+
+    def test_storage_outputs_are_exposed(self):
+        expected_outputs = [
+            "storage_account_id",
+            "storage_account_name",
+            "storage_primary_blob_endpoint",
+            "storage_container_ids",
+            "storage_private_endpoint_id",
+            "storage_private_dns_zone_id",
+            "storage_private_dns_zone_name",
+        ]
+
+        for output in expected_outputs:
+            with self.subTest(output=output):
+                self.assertIn(f'output "{output}"', self.outputs)
 
 
 if __name__ == "__main__":

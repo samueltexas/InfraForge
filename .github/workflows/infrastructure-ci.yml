@@ -94,6 +94,15 @@ jobs:
         working-directory: modules/compute
         run: terraform validate -no-color
 
+      - name: Initialize Storage module
+        working-directory: modules/storage
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate Storage module
+        working-directory: modules/storage
+        run: terraform validate -no-color
+
+
   security-scanning:
     name: Checkov Security Scan
     runs-on: ubuntu-latest
@@ -161,6 +170,8 @@ jobs:
 
       - name: Lint Compute module
         run: tflint --chdir=modules/compute
+      - name: Lint Storage module
+        run: tflint --chdir=modules/storage
 
   policy-validation:
     name: OPA Network Policy Tests
@@ -347,4 +358,32 @@ jobs:
 
       - name: Run Compute security tests
         working-directory: modules/compute
+        run: terraform test -no-color
+
+
+  storage-security:
+    name: Azure Storage Security Tests
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.0
+          terraform_wrapper: false
+
+      - name: Initialize Storage module
+        working-directory: modules/storage
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate Storage module
+        working-directory: modules/storage
+        run: terraform validate -no-color
+
+      - name: Run Storage security tests
+        working-directory: modules/storage
         run: terraform test -no-color
