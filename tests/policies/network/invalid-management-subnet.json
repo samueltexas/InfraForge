@@ -1,0 +1,13 @@
+{
+  "security_rules": [],
+  "outbound_rules": [],
+  "management_sources": [
+    {
+      "name": "wrong-subnet",
+      "source_type": "public_ipv4",
+      "source_prefix": "8.8.8.8/32",
+      "destination_subnet": "application",
+      "priority": 110
+    }
+  ]
+}

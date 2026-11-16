@@ -83,3 +83,57 @@ variable "virtual_network_id" {
     error_message = "Provide a valid Azure virtual network resource ID."
   }
 }
+
+
+variable "create_storage_encryption_key" {
+  description = "Create an RSA key for Azure Storage customer-managed encryption."
+  type        = bool
+  default     = false
+}
+
+
+variable "storage_encryption_key_name" {
+  description = "Name of the optional Storage customer-managed encryption key."
+  type        = string
+  default     = "infraforge-storage-cmk"
+
+  validation {
+    condition = (
+      length(var.storage_encryption_key_name) >= 1 &&
+      length(var.storage_encryption_key_name) <= 127 &&
+      can(regex("^[A-Za-z0-9-]+$", var.storage_encryption_key_name))
+    )
+    error_message = "Key name must contain 1-127 letters, numbers, or hyphens."
+  }
+}
+
+variable "key_encryption_principal_ids" {
+  description = "Managed identity principal IDs allowed to use the Storage encryption key."
+  type        = set(string)
+  default     = []
+
+  validation {
+    condition = (
+      alltrue([
+        for id in var.key_encryption_principal_ids :
+        can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", id))
+      ]) &&
+      (
+        (var.create_storage_encryption_key && length(var.key_encryption_principal_ids) > 0) ||
+        (!var.create_storage_encryption_key && length(var.key_encryption_principal_ids) == 0)
+      )
+    )
+    error_message = "Every key encryption principal must be a valid UUID."
+  }
+}
+
+variable "allow_trusted_services" {
+  description = "Allow trusted Azure services through the Key Vault firewall for supported integrations such as Storage CMK."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.create_storage_encryption_key || var.allow_trusted_services
+    error_message = "Trusted Azure services must be allowed when the Storage CMK is enabled."
+  }
+}

@@ -92,7 +92,6 @@ class KeyVaultSecurityTests(unittest.TestCase):
     def test_no_secret_values_are_managed(self):
         forbidden = {
             "azurerm_key_vault_secret",
-            "azurerm_key_vault_key",
             "azurerm_key_vault_certificate",
         }
 
@@ -127,6 +126,16 @@ class KeyVaultSecurityTests(unittest.TestCase):
             module["source"],
             "../../modules/keyvault",
         )
+
+    def test_storage_key_is_optional_and_scoped(self):
+        key_resource = find_resource(
+            self.main, "azurerm_key_vault_key", "storage_encryption"
+        )
+        crypto_assignment = find_resource(
+            self.main, "azurerm_role_assignment", "storage_key_crypto"
+        )
+        self.assertEqual(key_resource["count"], "${var.create_storage_encryption_key ? 1 : 0}")
+        self.assertEqual(crypto_assignment["role_definition_name"], "Key Vault Crypto Service Encryption User")
 
 
 if __name__ == "__main__":

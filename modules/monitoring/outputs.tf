@@ -32,3 +32,9 @@ output "monitoring_private_endpoint_id" {
   description = "Azure Monitor private endpoint resource ID."
   value       = azurerm_private_endpoint.monitoring.id
 }
+
+
+output "blob_private_dns_zone_id" {
+  description = "Shared Blob Private DNS Zone ID managed alongside the monitoring private link zones."
+  value       = azurerm_private_dns_zone.monitoring["privatelink.blob.core.windows.net"].id
+}

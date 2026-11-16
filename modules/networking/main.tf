@@ -18,7 +18,7 @@ resource "azurerm_subnet" "this" {
 
 
 # Create a dedicated NSG for each subnet.
-# Traffic restrictions will be defined in a separate security phase.
+# Explicit allowlists and default-deny rules are defined in security_rules.tf.
 resource "azurerm_network_security_group" "subnet" {
   for_each = var.subnets
 

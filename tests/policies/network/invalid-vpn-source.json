@@ -1,0 +1,13 @@
+{
+  "security_rules": [],
+  "outbound_rules": [],
+  "management_sources": [
+    {
+      "name": "non-private-vpn",
+      "source_type": "private_vpn",
+      "source_prefix": "8.8.8.0/24",
+      "destination_subnet": "management",
+      "priority": 110
+    }
+  ]
+}

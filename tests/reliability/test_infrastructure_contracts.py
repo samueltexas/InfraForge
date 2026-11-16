@@ -24,6 +24,7 @@ MODULES = {
             "tags",
             "security_rules",
             "management_sources",
+            "outbound_rules",
         },
         "outputs": {"vnet_id", "subnet_ids"},
     },
@@ -68,12 +69,17 @@ MODULES = {
             "tags",
             "private_endpoint_subnet_id",
             "virtual_network_id",
+            "create_storage_encryption_key",
+            "storage_encryption_key_name",
+            "key_encryption_principal_ids",
+            "allow_trusted_services",
         },
         "outputs": {
             "key_vault_id",
             "key_vault_name",
             "key_vault_uri",
             "private_endpoint_id",
+            "storage_encryption_key_id",
         },
     },
     "monitoring": {
@@ -109,8 +115,43 @@ MODULES = {
             "metric_alert_id",
             "private_link_scope_id",
             "monitoring_private_endpoint_id",
+            "blob_private_dns_zone_id",
         },
     },
+    "storage": {
+        "inputs": {
+            "storage_account_name",
+            "resource_group_name",
+            "location",
+            "private_endpoint_subnet_id",
+            "virtual_network_id",
+            "containers",
+            "account_replication_type",
+            "blob_soft_delete_retention_days",
+            "container_soft_delete_retention_days",
+            "key_vault_key_id",
+            "storage_encryption_identity_id",
+            "blob_data_contributor_principal_ids",
+            "log_analytics_workspace_id",
+            "blob_log_categories",
+            "existing_blob_private_dns_zone_id",
+            "queue_log_retention_days",
+            "tags",
+        },
+        "outputs": {
+            "storage_account_id",
+            "storage_account_name",
+            "primary_blob_endpoint",
+            "container_ids",
+            "private_endpoint_id",
+            "private_dns_zone_id",
+            "private_dns_zone_name",
+            "blob_diagnostic_setting_id",
+            "queue_properties_id",
+            "blob_data_role_assignment_ids",
+        },
+    },
+
 }
 
 
@@ -210,6 +251,7 @@ class InfrastructureContractTests(unittest.TestCase):
             "identity",
             "keyvault",
             "monitoring",
+            "storage",
         }
         self.assertEqual(set(modules), expected_modules)
 

@@ -15,6 +15,9 @@ terraform {
 provider "azurerm" {
   features {}
 
+  # Shared Key is disabled; use Microsoft Entra ID for Storage data-plane operations.
+  storage_use_azuread = true
+
   subscription_id = "00000000-0000-0000-0000-000000000000"
 }
 
@@ -135,4 +138,39 @@ module "compute" {
   os_disk_size_gb = 64
 
   tags = local.tags
+}
+
+
+# Store application data using private Blob Storage.
+module "storage" {
+  source = "../../modules/storage"
+
+  storage_account_name = "stinfraforgedev01"
+  resource_group_name  = module.resource_group.name
+  location             = local.location
+
+  private_endpoint_subnet_id = module.networking.subnet_ids["private-endpoints"]
+  virtual_network_id         = module.networking.vnet_id
+
+  # Reuse the Blob DNS zone already created by the Monitoring module.
+  existing_blob_private_dns_zone_id = module.monitoring.blob_private_dns_zone_id
+
+  blob_data_contributor_principal_ids = [module.identity.principal_id]
+  log_analytics_workspace_id          = module.monitoring.workspace_id
+  account_replication_type            = "GRS"
+
+  containers = [
+    "application-data",
+    "backup-data",
+    "audit-logs"
+  ]
+
+  blob_soft_delete_retention_days      = 14
+  container_soft_delete_retention_days = 14
+
+  tags = local.tags
+
+
+  # Ensure key creation/RBAC and shared DNS/workspace are ready first.
+  depends_on = [module.keyvault, module.monitoring]
 }

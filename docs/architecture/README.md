@@ -5,12 +5,14 @@
 InfraForge is a modular Infrastructure as Code reference project for
 Microsoft Azure.
 
-The integrated example composes four Terraform modules:
+The integrated platform example composes six Terraform modules; the developer workload adds the Compute module:
 
 - Networking
 - Identity
 - Key Vault
 - Monitoring
+- Storage
+- Compute (developer workload)
 
 The infrastructure is validated locally without deploying Azure resources.
 
@@ -42,6 +44,7 @@ The infrastructure is validated locally without deploying Azure resources.
                     |
                     +-- Key Vault Private Endpoint
                     +-- Monitoring Private Endpoint
+                    +-- Blob Storage Private Endpoint
 
     Managed Identity
         |
@@ -110,6 +113,20 @@ Configures:
 The integrated example references the Key Vault resource ID for
 diagnostics and metric alerts.
 
+### Storage
+
+Configures a private StorageV2 account with geo-redundant replication,
+Customer-Managed Key encryption through Key Vault, disabled Shared Key
+authentication, private Blob containers, workload RBAC, Blob diagnostics,
+Queue service logging, soft-delete retention and Private Endpoint connectivity.
+The integrated examples reuse the Blob Private DNS Zone owned by Monitoring
+to avoid duplicate Azure resources.
+
+### Compute
+
+The developer workload adds a private Linux VM using SSH public-key
+authentication, Trusted Launch, vTPM, Secure Boot and the shared managed identity.
+
 ## Module Integration
 
 | Source | Destination | Terraform Reference |
@@ -120,6 +137,10 @@ diagnostics and metric alerts.
 | Networking | Monitoring | `module.networking.subnet_ids["private-endpoints"]` |
 | Identity | Key Vault | `module.identity.principal_id` |
 | Key Vault | Monitoring | `module.keyvault.key_vault_id` |
+| Identity | Storage | `module.identity.principal_id` and `identity_id` |
+| Key Vault | Storage | `module.keyvault.storage_encryption_key_id` |
+| Monitoring | Storage | Workspace ID and shared Blob DNS zone ID |
+| Networking | Storage | Private Endpoint subnet and VNet IDs |
 
 ## Security Controls
 
@@ -142,6 +163,15 @@ Static security checks do not prove runtime security.
 
 Private endpoint connectivity, DNS resolution, operational
 monitoring, and alert delivery have not been verified in Azure.
+
+The Storage examples configure `storage_use_azuread = true`. The Terraform
+execution principal must independently have `Storage Blob Data Contributor`
+data-plane access to create Blob containers while Shared Key is disabled.
+The workload Managed Identity receives a separate runtime data role.
+
+Creating the CMK uses the Key Vault data plane. A real deployment runner
+must reach the Key Vault private endpoint, for example from a self-hosted
+runner in the connected VNet. GitHub-hosted CI does not deploy resources.
 
 ## Known Limitations
 
