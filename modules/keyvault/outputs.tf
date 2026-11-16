@@ -17,3 +17,9 @@ output "private_endpoint_id" {
   description = "Azure resource ID of the Key Vault private endpoint."
   value       = azurerm_private_endpoint.keyvault.id
 }
+
+
+output "storage_encryption_key_id" {
+  description = "Versionless Key Vault key ID for Azure Storage CMK, or null when not enabled."
+  value       = try(azurerm_key_vault_key.storage_encryption[0].versionless_id, null)
+}

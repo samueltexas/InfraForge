@@ -150,6 +150,8 @@ class DeveloperWorkloadTests(unittest.TestCase):
             "storage_private_endpoint_id",
             "storage_private_dns_zone_id",
             "storage_private_dns_zone_name",
+            "storage_blob_diagnostic_setting_id",
+            "storage_queue_properties_id",
         ]
 
         for output in expected_outputs:

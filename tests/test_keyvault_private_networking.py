@@ -30,7 +30,7 @@ class KeyVaultPrivateNetworkingTests(unittest.TestCase):
             self.vault,
             r'network_acls\s*\{\s*'
             r'default_action\s*=\s*"Deny"\s*'
-            r'bypass\s*=\s*"None"',
+            r'bypass\s*=\s*var\.allow_trusted_services \? "AzureServices" : "None"',
         )
 
     def test_private_endpoint_references_key_vault(self):

@@ -58,3 +58,13 @@ output "storage_private_dns_zone_name" {
   description = "Domain name of the Blob Private DNS Zone."
   value       = module.storage.private_dns_zone_name
 }
+
+output "storage_blob_diagnostic_setting_id" {
+  description = "Resource ID of Blob service diagnostics in Log Analytics."
+  value       = module.storage.blob_diagnostic_setting_id
+}
+
+output "storage_queue_properties_id" {
+  description = "Resource ID of Queue service logging configuration."
+  value       = module.storage.queue_properties_id
+}

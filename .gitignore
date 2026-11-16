@@ -24,3 +24,5 @@ __pycache__/
 
 # Generated policy input
 /tests/policies/network/terraform-generated.json
+
+.backups/

@@ -39,7 +39,6 @@ module "networking" {
 
   # Explicit inbound exceptions; all other inbound traffic is denied.
   security_rules = {
-
     AllowApplicationPostgres = {
       destination_subnet = "database"
       source_prefix      = "10.10.1.0/24"
@@ -48,8 +47,19 @@ module "networking" {
     }
   }
 
-  # Explicit external and VPN administrative access.
+  # Explicit external and VPN administrative access terminates on the management subnet.
   management_sources = var.management_sources
+
+  # Egress is denied by default; only the application-to-database flow is permitted.
+  outbound_rules = {
+    AllowApplicationToPostgres = {
+      source_subnet      = "application"
+      destination_prefix = "10.10.2.0/24"
+      destination_port   = "5432"
+      protocol           = "Tcp"
+      priority           = 100
+    }
+  }
 
   subnets = {
     application = ["10.10.1.0/24"]

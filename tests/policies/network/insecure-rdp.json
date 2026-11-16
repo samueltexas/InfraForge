@@ -8,5 +8,7 @@
       "destination_port_range": "3389",
       "source_address_prefix": "*"
     }
-  ]
+  ],
+  "outbound_rules": [],
+  "management_sources": []
 }

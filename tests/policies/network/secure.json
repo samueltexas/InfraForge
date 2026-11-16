@@ -1,12 +1,38 @@
 {
   "security_rules": [
     {
-      "name": "AllowInternalSSH",
+      "name": "AllowApplicationPostgres",
       "direction": "Inbound",
       "access": "Allow",
       "protocol": "Tcp",
-      "destination_port_range": "22",
-      "source_address_prefix": "10.10.3.0/24"
+      "destination_port_range": "5432",
+      "source_address_prefix": "10.10.1.0/24"
+    }
+  ],
+  "outbound_rules": [
+    {
+      "name": "AllowApplicationToPostgres",
+      "direction": "Outbound",
+      "access": "Allow",
+      "protocol": "Tcp",
+      "destination_port_range": "5432",
+      "destination_address_prefix": "10.10.2.0/24"
+    }
+  ],
+  "management_sources": [
+    {
+      "name": "trusted-admin",
+      "source_type": "public_ipv4",
+      "source_prefix": "8.8.8.8/32",
+      "destination_subnet": "management",
+      "priority": 110
+    },
+    {
+      "name": "corporate-vpn",
+      "source_type": "private_vpn",
+      "source_prefix": "10.20.0.0/24",
+      "destination_subnet": "management",
+      "priority": 120
     }
   ]
 }

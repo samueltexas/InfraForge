@@ -5,6 +5,7 @@ resource "azurerm_key_vault" "this" {
   resource_group_name = var.resource_group_name
   tenant_id           = var.tenant_id
 
+  # Standard SKU avoids Premium HSM costs.
   sku_name = "standard"
 
   # Use Azure RBAC instead of legacy Key Vault access policies.
@@ -16,7 +17,7 @@ resource "azurerm_key_vault" "this" {
 
   network_acls {
     default_action = "Deny"
-    bypass         = "None"
+    bypass         = var.allow_trusted_services ? "AzureServices" : "None"
   }
 
   # Protect the vault from accidental deletion and premature purging.
@@ -32,6 +33,37 @@ resource "azurerm_role_assignment" "secrets_reader" {
 
   scope                = azurerm_key_vault.this.id
   role_definition_name = "Key Vault Secrets User"
+  principal_id         = each.value
+  principal_type       = "ServicePrincipal"
+}
+
+
+# Create a dedicated RSA key only when Storage CMK integration is requested.
+resource "azurerm_key_vault_key" "storage_encryption" {
+  count = var.create_storage_encryption_key ? 1 : 0
+
+  name         = var.storage_encryption_key_name
+  key_vault_id = azurerm_key_vault.this.id
+  key_type     = "RSA"
+  key_size     = 2048
+  key_opts     = ["unwrapKey", "wrapKey"]
+
+  rotation_policy {
+    automatic {
+      time_before_expiry = "P30D"
+    }
+
+    expire_after         = "P2Y"
+    notify_before_expiry = "P30D"
+  }
+}
+
+# Grant only the Storage encryption identity the required cryptographic operations.
+resource "azurerm_role_assignment" "storage_key_crypto" {
+  for_each = var.create_storage_encryption_key ? var.key_encryption_principal_ids : toset([])
+
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = each.value
   principal_type       = "ServicePrincipal"
 }

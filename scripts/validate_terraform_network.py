@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate InfraForge Terraform network configuration without Azure access."""
 
+import argparse
 import ipaddress
 import json
 import sys
@@ -57,6 +58,8 @@ def validate_module_template():
     allowed = get_resource(configuration, "allow_inbound")
     denied = get_resource(configuration, "deny_inbound")
     management = get_resource(configuration, "allow_management_ssh")
+    outbound = get_resource(configuration, "allow_outbound")
+    denied_outbound = get_resource(configuration, "deny_outbound")
 
     expected_allowed = {
         "for_each": "${var.security_rules}",
@@ -122,6 +125,61 @@ def validate_module_template():
         "Unexpected deny rule port or destination mapping.",
     )
 
+    expected_outbound = {
+        "for_each": "${var.outbound_rules}",
+        "direction": "Outbound",
+        "access": "Allow",
+        "protocol": "${each.value.protocol}",
+        "destination_address_prefix": "${each.value.destination_prefix}",
+        "destination_port_range": "${each.value.destination_port}",
+        "priority": "${each.value.priority}",
+        "network_security_group_name": (
+            "${azurerm_network_security_group.subnet"
+            "[each.value.source_subnet].name}"
+        ),
+    }
+
+    for attribute, expected in expected_outbound.items():
+        require(
+            outbound.get(attribute) == expected,
+            f"Unexpected allow_outbound.{attribute}: "
+            f"{outbound.get(attribute)!r}",
+        )
+
+    require(
+        outbound.get("resource_group_name") == "${var.resource_group_name}"
+        and outbound.get("source_port_range") == "*"
+        and outbound.get("source_address_prefix") == "*",
+        "Unexpected outbound rule resource group or source mapping.",
+    )
+
+    expected_denied_outbound = {
+        "for_each": "${var.subnets}",
+        "direction": "Outbound",
+        "access": "Deny",
+        "protocol": "*",
+        "destination_address_prefix": "*",
+        "destination_port_range": "*",
+        "priority": 4000,
+        "network_security_group_name": (
+            "${azurerm_network_security_group.subnet[each.key].name}"
+        ),
+    }
+
+    for attribute, expected in expected_denied_outbound.items():
+        require(
+            denied_outbound.get(attribute) == expected,
+            f"Unexpected deny_outbound.{attribute}: "
+            f"{denied_outbound.get(attribute)!r}",
+        )
+
+    require(
+        denied_outbound.get("resource_group_name") == "${var.resource_group_name}"
+        and denied_outbound.get("source_address_prefix") == "*"
+        and denied_outbound.get("source_port_range") == "*",
+        "Unexpected outbound deny resource group or source mapping.",
+    )
+
     expected_management = {
         "for_each": "${var.management_sources}",
         "direction": "Inbound",
@@ -132,7 +190,7 @@ def validate_module_template():
         "priority": "${each.value.priority}",
         "network_security_group_name": (
             "${azurerm_network_security_group.subnet"
-            '["application"].name}'
+            '["management"].name}'
         ),
     }
 
@@ -157,6 +215,7 @@ def validate_module_template():
 
     print("PASS: Terraform security resource mappings")
     print("PASS: Terraform management SSH resource mappings")
+    print("PASS: Terraform outbound allowlist and default-deny mappings")
 
 
 
@@ -193,9 +252,9 @@ def validate_management_sources(sources, subnets, security_rules):
         )
 
         require(
-            source["destination_subnet"] == "application"
-            and "application" in subnets,
-            f"Management SSH must target the application subnet: {name}",
+            source["destination_subnet"] == "management"
+            and "management" in subnets,
+            f"Management SSH must target the dedicated management subnet: {name}",
         )
 
         require(
@@ -232,8 +291,30 @@ def validate_management_sources(sources, subnets, security_rules):
                 f"Public management sources must use /32: {name}",
             )
 
+            non_public_ranges = [
+                ipaddress.ip_network("0.0.0.0/8"),
+                ipaddress.ip_network("10.0.0.0/8"),
+                ipaddress.ip_network("100.64.0.0/10"),
+                ipaddress.ip_network("127.0.0.0/8"),
+                ipaddress.ip_network("169.254.0.0/16"),
+                ipaddress.ip_network("172.16.0.0/12"),
+                ipaddress.ip_network("192.0.0.0/24"),
+                ipaddress.ip_network("192.0.2.0/24"),
+                ipaddress.ip_network("192.88.99.0/24"),
+                ipaddress.ip_network("192.168.0.0/16"),
+                ipaddress.ip_network("198.18.0.0/15"),
+                ipaddress.ip_network("198.51.100.0/24"),
+                ipaddress.ip_network("203.0.113.0/24"),
+                ipaddress.ip_network("224.0.0.0/4"),
+                ipaddress.ip_network("240.0.0.0/4"),
+            ]
+
             require(
-                network.network_address.is_global,
+                network.network_address.is_global
+                and not any(
+                    network.network_address in reserved
+                    for reserved in non_public_ranges
+                ),
                 f"Public management source must be globally routable: {name}",
             )
 
@@ -249,7 +330,7 @@ def validate_management_sources(sources, subnets, security_rules):
     print(f"PASS: {len(sources)} management sources validated")
 
 
-def validate_example():
+def validate_example(output_path=OUTPUT):
     configuration = load_hcl(EXAMPLE)
     networking = get_networking_module(configuration)
 
@@ -301,6 +382,7 @@ def validate_example():
         subnet_networks[name] = parsed
 
     normalized = []
+    used_inbound_priorities = set()
 
     for name, rule in rules.items():
         require(isinstance(rule, dict), f"Invalid rule: {name}")
@@ -337,8 +419,9 @@ def validate_example():
         require(
             isinstance(port_text, str)
             and port_text.isdecimal()
-            and 1 <= int(port_text) <= 65535,
-            f"Invalid TCP port: {name}",
+            and 1 <= int(port_text) <= 65535
+            and int(port_text) not in {22, 3389},
+            f"Invalid or administrative TCP port: {name}",
         )
 
         priority = rule["priority"]
@@ -347,6 +430,12 @@ def validate_example():
             type(priority) is int and 100 <= priority < 4000,
             f"Invalid rule priority: {name}",
         )
+        priority_key = (rule["destination_subnet"], priority)
+        require(
+            priority_key not in used_inbound_priorities,
+            f"Duplicate inbound NSG priority: {name}",
+        )
+        used_inbound_priorities.add(priority_key)
 
         normalized.append({
             "name": name,
@@ -357,28 +446,130 @@ def validate_example():
             "source_address_prefix": str(source),
         })
 
-    management_sources = networking.get("management_sources")
+    management_sources = networking.get("management_sources", {})
+    normalized_management = []
 
     if isinstance(management_sources, dict):
-        validate_management_sources(
-            management_sources,
-            subnets,
-            rules,
+        validate_management_sources(management_sources, subnets, rules)
+
+        for name, source in management_sources.items():
+            normalized_management.append({
+                "name": name,
+                "source_type": source["source_type"],
+                "source_prefix": source["source_prefix"],
+                "destination_subnet": source["destination_subnet"],
+                "priority": source["priority"],
+            })
+    else:
+        require(
+            management_sources == "${var.management_sources}",
+            "Management sources must be an explicit map or the approved input variable.",
         )
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(
-        json.dumps({"security_rules": normalized}, indent=2) + "\n",
+    outbound_rules = networking.get("outbound_rules", {})
+    require(isinstance(outbound_rules, dict), "Outbound rules must be a literal map.")
+
+    normalized_outbound = []
+    used_outbound_priorities = set()
+
+    for name, rule in outbound_rules.items():
+        require(isinstance(rule, dict), f"Invalid outbound rule: {name}")
+        require(
+            set(rule) == {
+                "source_subnet",
+                "destination_prefix",
+                "destination_port",
+                "protocol",
+                "priority",
+            },
+            f"Unexpected outbound rule fields: {name}",
+        )
+        require(
+            rule["source_subnet"] in subnet_networks,
+            f"Unknown outbound source subnet: {name}",
+        )
+
+        destination = ipaddress.ip_network(
+            rule["destination_prefix"], strict=True
+        )
+        require(
+            destination.version == 4 and destination.prefixlen >= 24,
+            f"Outbound destination must be an IPv4 CIDR with prefix /24 through /32: {name}",
+        )
+        require(
+            rule["protocol"] in {"Tcp", "Udp"},
+            f"Unsupported outbound protocol: {name}",
+        )
+
+        port_text = rule["destination_port"]
+        require(
+            isinstance(port_text, str)
+            and port_text.isdecimal()
+            and 1 <= int(port_text) <= 65535,
+            f"Invalid outbound destination port: {name}",
+        )
+
+        priority = rule["priority"]
+        require(
+            type(priority) is int and 100 <= priority < 4000,
+            f"Invalid outbound priority: {name}",
+        )
+        priority_key = (rule["source_subnet"], priority)
+        require(
+            priority_key not in used_outbound_priorities,
+            f"Duplicate outbound NSG priority: {name}",
+        )
+        used_outbound_priorities.add(priority_key)
+
+        normalized_outbound.append({
+            "name": name,
+            "direction": "Outbound",
+            "access": "Allow",
+            "protocol": rule["protocol"],
+            "destination_port_range": port_text,
+            "destination_address_prefix": str(destination),
+        })
+
+    output_path = Path(output_path).expanduser().resolve()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    OUTPUT_PAYLOAD = {
+        "security_rules": normalized,
+        "outbound_rules": normalized_outbound,
+        "management_sources": normalized_management,
+    }
+
+    output_path.write_text(
+        json.dumps(OUTPUT_PAYLOAD, indent=2) + "\n",
         encoding="utf-8",
     )
 
-    print(f"PASS: {len(normalized)} Terraform network rules validated")
-    print(f"GENERATED: {OUTPUT.relative_to(ROOT)}")
+    print(
+        f"PASS: {len(normalized)} inbound and "
+        f"{len(normalized_outbound)} outbound allowlist rules validated"
+    )
+    try:
+        display_path = output_path.relative_to(ROOT)
+    except ValueError:
+        display_path = output_path
+
+    print(f"GENERATED: {display_path}")
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Validate InfraForge Terraform network configuration."
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=OUTPUT,
+        help="Destination for the Terraform-derived OPA JSON input.",
+    )
+    args = parser.parse_args()
+
     validate_module_template()
-    validate_example()
+    validate_example(output_path=args.output)
     print("TERRAFORM NETWORK VALIDATION PASSED")
 
 

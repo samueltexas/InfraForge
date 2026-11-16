@@ -104,8 +104,7 @@ class InfrastructureSecurityRegressionTests(unittest.TestCase):
     def test_networking_rejects_unrestricted_ssh_and_rdp(self):
         source = read_source("modules", "networking", "variables.tf")
 
-        self.assertIn('contains(["22", "3389"], rule.destination_port)', source)
-        self.assertIn('!contains(["22", "3389"], rule.destination_port)', source)
+        self.assertIn('!contains([22, 3389], tonumber(rule.destination_port))', source)
 
     def test_networking_enforces_unique_priorities_per_subnet(self):
         source = read_source("modules", "networking", "variables.tf")

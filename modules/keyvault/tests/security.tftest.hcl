@@ -80,3 +80,40 @@ run "reject_invalid_vault_name" {
     var.name
   ]
 }
+
+
+run "storage_customer_managed_key" {
+  command = plan
+
+  variables {
+    create_storage_encryption_key = true
+    allow_trusted_services        = true
+    key_encryption_principal_ids  = ["22222222-2222-2222-2222-222222222222"]
+  }
+
+  assert {
+    condition = (
+      azurerm_key_vault_key.storage_encryption[0].key_type == "RSA" &&
+      azurerm_key_vault_key.storage_encryption[0].key_size == 2048
+    )
+    error_message = "Standard CMK must use RSA 2048."
+  }
+
+  assert {
+    condition = (
+      azurerm_key_vault_key.storage_encryption[0].rotation_policy[0].expire_after
+      == "P2Y"
+    )
+    error_message = "Storage encryption key lifetime must be two years."
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.storage_key_crypto["22222222-2222-2222-2222-222222222222"].role_definition_name == "Key Vault Crypto Service Encryption User"
+    error_message = "Storage identity must receive the dedicated CMK role."
+  }
+
+  assert {
+    condition     = azurerm_key_vault.this.sku_name == "standard"
+    error_message = "Storage CMK must use the Standard Key Vault SKU."
+  }
+}

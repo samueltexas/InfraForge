@@ -11,26 +11,27 @@ ROOT = Path(__file__).resolve().parents[1]
 CASES = [
     ("secure.json", None),
     ("insecure-ssh.json", "NET-001:"),
+    ("insecure-ssh-32.json", "NET-001:"),
     ("insecure-rdp.json", "NET-002:"),
+    ("insecure-public-egress.json", "NET-003:"),
+    ("insecure-broad-egress.json", "NET-003:"),
+    ("invalid-public-management-prefix.json", "NET-004:"),
+    ("invalid-management-subnet.json", "NET-005:"),
+    ("invalid-vpn-source.json", "NET-006:"),
+    ("invalid-reserved-public-ip.json", "NET-004:"),
 ]
 
 
 def run_case(filename, expected_violation):
     command = [
-        "docker",
-        "run",
-        "--rm",
-        "-v",
-        f"{ROOT}:/project:ro",
-        "-w",
-        "/project",
+        "docker", "run", "--rm",
+        "-v", f"{ROOT}:/project:ro",
+        "-w", "/project",
         "openpolicyagent/conftest:v0.59.0",
         "test",
         f"tests/policies/network/{filename}",
-        "--policy",
-        "policies/network",
-        "--output",
-        "json",
+        "--policy", "policies/network",
+        "--output", "json",
     ]
 
     result = subprocess.run(
@@ -74,17 +75,17 @@ def run_case(filename, expected_violation):
     else:
         if result.returncode != 1:
             raise RuntimeError(
-                f"Insecure fixture did not produce policy failure: {filename}"
+                f"Insecure fixture did not produce a policy failure: {filename}"
             )
 
         if len(messages) != 1:
             raise RuntimeError(
-                f"Expected exactly one policy violation: {messages}"
+                f"Expected exactly one policy violation for {filename}: {messages}"
             )
 
         if not messages[0].startswith(expected_violation):
             raise RuntimeError(
-                f"Unexpected policy violation: {messages}"
+                f"Unexpected policy violation for {filename}: {messages}"
             )
 
     print(f"PASS: {filename}")
@@ -94,7 +95,7 @@ def main():
     for filename, expected_violation in CASES:
         run_case(filename, expected_violation)
 
-    print("ALL NETWORK POLICY TESTS PASSED")
+    print(f"ALL {len(CASES)} NETWORK POLICY TESTS PASSED")
 
 
 if __name__ == "__main__":
