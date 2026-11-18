@@ -56,3 +56,22 @@ cost gate is claimed in this revision.
 4. Correct code or document a narrowly scoped accepted tradeoff; never disable a
    scanner globally to get a green badge.
 5. Verify Azure state, convergence and CI; publish redacted evidence and limitations.
+
+## Observed drift triage — 2026-11-18
+
+The first read-only refresh check returned exit code 2. Inspection of the fresh
+refresh-only plan found three state differences:
+
+- The shared Blob DNS zone's computed `number_of_record_sets` increased from 2
+  to 3 after the Storage private endpoint added its record.
+- Blob and Queue diagnostic logs were returned by Azure with explicit legacy
+  `retention_policy { days = 0, enabled = false }` values instead of empty blocks.
+  StorageRead, StorageWrite and StorageDelete remained present. This legacy
+  diagnostic retention field is distinct from Log Analytics workspace retention.
+
+These observations are metadata/default normalization, not proof of an outage or
+lost audit categories. No apply, refresh-only apply or state edit was performed.
+Until a reviewed state refresh records those values, a refresh-only drift check
+can continue reporting them. Do not suppress all drift to hide expected changes;
+classify and record the result. A normal desired-configuration plan is a separate
+check from this remote-versus-saved-state comparison.
