@@ -169,6 +169,12 @@ variable "blob_log_categories" {
   }
 }
 
+variable "create_blob_private_dns_zone" {
+  description = "Whether this module owns and creates the Blob Private DNS Zone."
+  type        = bool
+  default     = true
+}
+
 variable "existing_blob_private_dns_zone_id" {
   description = "Optional existing Blob Private DNS Zone ID. Supply this when a shared DNS zone is already managed by another module."
   type        = string
@@ -194,4 +200,10 @@ variable "tags" {
   description = "Resource tags for governance and cost management."
   type        = map(string)
   default     = {}
+}
+
+variable "enable_legacy_queue_logging" {
+  description = "Use legacy Queue analytics (requires private Queue connectivity); false uses Azure Monitor diagnostics with workspace retention."
+  type        = bool
+  default     = true
 }

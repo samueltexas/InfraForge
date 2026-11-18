@@ -136,6 +136,8 @@ MODULES = {
             "blob_log_categories",
             "existing_blob_private_dns_zone_id",
             "queue_log_retention_days",
+            "enable_legacy_queue_logging",
+            "create_blob_private_dns_zone",
             "tags",
         },
         "outputs": {
@@ -148,6 +150,7 @@ MODULES = {
             "private_dns_zone_name",
             "blob_diagnostic_setting_id",
             "queue_properties_id",
+            "queue_diagnostic_setting_id",
             "blob_data_role_assignment_ids",
         },
     },
@@ -246,9 +249,6 @@ class InfrastructureContractTests(unittest.TestCase):
             load_integrated_configuration(), "module"
         )
         expected_modules = {
-            "resource_group",
-            "networking",
-            "identity",
             "keyvault",
             "monitoring",
             "storage",

@@ -154,6 +154,7 @@ module "storage" {
 
   # Reuse the Blob DNS zone already created by the Monitoring module.
   existing_blob_private_dns_zone_id = module.monitoring.blob_private_dns_zone_id
+  create_blob_private_dns_zone      = false
 
   blob_data_contributor_principal_ids = [module.identity.principal_id]
   log_analytics_workspace_id          = module.monitoring.workspace_id

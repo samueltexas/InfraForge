@@ -115,10 +115,13 @@ diagnostics and metric alerts.
 
 ### Storage
 
-Configures a private StorageV2 account with geo-redundant replication,
-Customer-Managed Key encryption through Key Vault, disabled Shared Key
-authentication, private Blob containers, workload RBAC, Blob diagnostics,
-Queue service logging, soft-delete retention and Private Endpoint connectivity.
+Configures a private StorageV2 account with configurable replication (GRS module
+default; LRS in Poland Central for the integrated demonstration), optional
+Customer-Managed Key encryption through Key Vault, infrastructure encryption,
+Entra ID authorization, disabled Shared Key and local-user authentication,
+private Blob containers, workload RBAC, Blob and Queue audit logging,
+soft-delete retention and Private Endpoint connectivity.
+The integrated deployment uses Microsoft-managed encryption keys.
 The integrated examples reuse the Blob Private DNS Zone owned by Monitoring
 to avoid duplicate Azure resources.
 
@@ -161,13 +164,21 @@ resources can be successfully deployed.
 
 Static security checks do not prove runtime security.
 
-Private endpoint connectivity, DNS resolution, operational
-monitoring, and alert delivery have not been verified in Azure.
+Azure management-plane provisioning, endpoint approval, private DNS records,
+RBAC and diagnostic configuration have been verified. End-to-end private
+connectivity, log ingestion and alert delivery remain unverified.
 
-The Storage examples configure `storage_use_azuread = true`. The Terraform
-execution principal must independently have `Storage Blob Data Contributor`
-data-plane access to create Blob containers while Shared Key is disabled.
-The workload Managed Identity receives a separate runtime data role.
+The integrated example uses AzureRM 4.81+ management-plane operations with
+`features.storage.data_plane_available = false`. Containers use
+`storage_account_id`, so provisioning does not require public data-plane access.
+The workload Managed Identity receives Storage Blob Data Contributor separately
+on each container. Blob access still requires Entra authorization and private
+network connectivity. Queue diagnostics use Azure Monitor; optional legacy
+Queue analytics require a runner with private Queue connectivity.
+
+Foundation resources are owned by `examples/foundation`; the integrated example
+references their resource group, VNet, subnet and identity through data sources.
+See [deployment guidance](../deployment.md) for state ownership and costs.
 
 Creating the CMK uses the Key Vault data plane. A real deployment runner
 must reach the Key Vault private endpoint, for example from a self-hosted

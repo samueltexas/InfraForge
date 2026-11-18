@@ -42,10 +42,15 @@ output "blob_diagnostic_setting_id" {
 
 output "queue_properties_id" {
   description = "Azure resource ID of the Queue service logging configuration."
-  value       = azurerm_storage_account_queue_properties.this.id
+  value       = try(azurerm_storage_account_queue_properties.this[0].id, null)
 }
 
 output "blob_data_role_assignment_ids" {
   description = "Azure RBAC assignment IDs granting Blob data access to workload identities."
   value       = [for assignment in azurerm_role_assignment.blob_data_contributor : assignment.id]
+}
+
+output "queue_diagnostic_setting_id" {
+  description = "Queue Azure Monitor diagnostic setting ID, or null when legacy analytics is used."
+  value       = try(azurerm_monitor_diagnostic_setting.queue[0].id, null)
 }

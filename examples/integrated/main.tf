@@ -4,25 +4,24 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.81.0, < 5.0.0"
     }
   }
 }
 
-# Placeholder identifiers are used for offline validation only.
-# This example must not be deployed without an approved Azure configuration.
 provider "azurerm" {
-  features {}
-
-  # Shared Key is disabled; use Microsoft Entra ID for Storage data-plane operations.
+  features {
+    storage {
+      data_plane_available = false
+    }
+  }
   storage_use_azuread = true
-
-  subscription_id = "00000000-0000-0000-0000-000000000000"
 }
 
+data "azurerm_client_config" "current" {}
+
 locals {
-  resource_group_name = "rg-infraforge-dev"
-  location            = "westeurope"
+  location = "polandcentral"
 
   tags = {
     project     = "InfraForge"
@@ -31,77 +30,53 @@ locals {
   }
 }
 
-# Provide a shared network for private Azure service connectivity.
-# Create the shared Azure Resource Group.
-module "resource_group" {
-  source   = "../../modules/resource-group"
-  name     = local.resource_group_name
-  location = local.location
-  tags     = local.tags
+# Reuse the deployed foundation infrastructure.
+data "azurerm_resource_group" "foundation" {
+  name = "rg-infraforge-dev"
 }
 
-module "networking" {
-  source = "../../modules/networking"
-
-  resource_group_name = module.resource_group.name
-  location            = module.resource_group.location
-  vnet_name           = "vnet-infraforge-integrated-dev"
-
-  address_space = ["10.20.0.0/16"]
-
-  subnets = {
-    application       = ["10.20.1.0/24"]
-    database          = ["10.20.2.0/24"]
-    management        = ["10.20.3.0/24"]
-    private-endpoints = ["10.20.4.0/24"]
-  }
-
-  security_rules = {}
-
-  tags = local.tags
+data "azurerm_virtual_network" "foundation" {
+  name                = "vnet-infraforge-foundation-dev"
+  resource_group_name = data.azurerm_resource_group.foundation.name
 }
 
-# Create a user-assigned identity without embedded credentials.
-module "identity" {
-  source = "../../modules/identity"
-
-  name                = "id-infraforge-integrated-dev"
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-
-  role_assignments = {}
-
-  tags = local.tags
+data "azurerm_subnet" "private_endpoints" {
+  name                 = "private-endpoints"
+  virtual_network_name = data.azurerm_virtual_network.foundation.name
+  resource_group_name  = data.azurerm_resource_group.foundation.name
 }
 
-# Grant the managed identity permission to read Key Vault secrets.
+data "azurerm_user_assigned_identity" "foundation" {
+  name                = "id-infraforge-foundation-dev"
+  resource_group_name = data.azurerm_resource_group.foundation.name
+}
+
+# Private secrets management.
 module "keyvault" {
   source = "../../modules/keyvault"
 
   name                = "kv-infraforge-int-dev"
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
-
-  # Placeholder tenant ID for local validation only.
-  tenant_id = "00000000-0000-0000-0000-000000000000"
+  location            = local.location
+  resource_group_name = data.azurerm_resource_group.foundation.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
 
   reader_principal_ids = [
-    module.identity.principal_id
+    data.azurerm_user_assigned_identity.foundation.principal_id
   ]
 
-  private_endpoint_subnet_id = module.networking.subnet_ids["private-endpoints"]
-  virtual_network_id         = module.networking.vnet_id
+  private_endpoint_subnet_id = data.azurerm_subnet.private_endpoints.id
+  virtual_network_id         = data.azurerm_virtual_network.foundation.id
 
   tags = local.tags
 }
 
-# Collect Key Vault diagnostics and configure private monitoring access.
+# Centralized monitoring and private connectivity.
 module "monitoring" {
   source = "../../modules/monitoring"
 
   workspace_name      = "law-infraforge-integrated-dev"
-  location            = module.resource_group.location
-  resource_group_name = module.resource_group.name
+  location            = local.location
+  resource_group_name = data.azurerm_resource_group.foundation.name
 
   diagnostic_target_id = module.keyvault.key_vault_id
 
@@ -114,30 +89,35 @@ module "monitoring" {
   metric_name      = "Availability"
   alert_threshold  = 80
 
-  private_endpoint_subnet_id = module.networking.subnet_ids["private-endpoints"]
-  virtual_network_id         = module.networking.vnet_id
+  private_endpoint_subnet_id = data.azurerm_subnet.private_endpoints.id
+  virtual_network_id         = data.azurerm_virtual_network.foundation.id
 
   tags = local.tags
 }
 
-
-# Store application data using private Blob Storage.
+# Private application data storage.
 module "storage" {
   source = "../../modules/storage"
 
   storage_account_name = "stinfraforgeint01"
-  resource_group_name  = module.resource_group.name
+  resource_group_name  = data.azurerm_resource_group.foundation.name
   location             = local.location
 
-  private_endpoint_subnet_id = module.networking.subnet_ids["private-endpoints"]
-  virtual_network_id         = module.networking.vnet_id
+  private_endpoint_subnet_id = data.azurerm_subnet.private_endpoints.id
+  virtual_network_id         = data.azurerm_virtual_network.foundation.id
 
-  # Reuse the Blob DNS zone already created by the Monitoring module.
   existing_blob_private_dns_zone_id = module.monitoring.blob_private_dns_zone_id
+  create_blob_private_dns_zone      = false
 
-  blob_data_contributor_principal_ids = [module.identity.principal_id]
-  log_analytics_workspace_id          = module.monitoring.workspace_id
-  account_replication_type            = "GRS"
+  blob_data_contributor_principal_ids = [
+    data.azurerm_user_assigned_identity.foundation.principal_id
+  ]
+
+  log_analytics_workspace_id = module.monitoring.workspace_id
+
+  # Poland Central supports LRS; use it for this credit-funded demonstration.
+  account_replication_type    = "LRS"
+  enable_legacy_queue_logging = false
 
   containers = [
     "application-data",
@@ -150,7 +130,8 @@ module "storage" {
 
   tags = local.tags
 
-
-  # Ensure key creation/RBAC and shared DNS/workspace are ready first.
-  depends_on = [module.keyvault, module.monitoring]
+  depends_on = [
+    module.keyvault,
+    module.monitoring
+  ]
 }

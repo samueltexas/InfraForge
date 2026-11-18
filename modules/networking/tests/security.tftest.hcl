@@ -34,6 +34,15 @@ run "enforces_default_deny_in_both_directions" {
     condition     = azurerm_network_security_rule.deny_outbound["application"].access == "Deny"
     error_message = "Unapproved outbound traffic must be denied."
   }
+
+  assert {
+    condition = alltrue([
+      for subnet in azurerm_subnet.this :
+      subnet.default_outbound_access_enabled == false
+    ])
+    error_message = "Default outbound access must be disabled on every subnet."
+  }
+
 }
 
 run "creates_scoped_outbound_allowlist" {

@@ -92,7 +92,7 @@ class InfrastructureSecurityRegressionTests(unittest.TestCase):
     def test_private_endpoint_networking_is_integrated(self):
         source = read_source("examples", "integrated", "main.tf")
         self.assertIn(
-            'module.networking.subnet_ids["private-endpoints"]',
+            'data.azurerm_subnet.private_endpoints.id',
             source,
         )
 

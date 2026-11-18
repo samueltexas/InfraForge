@@ -6,7 +6,7 @@ InfraForge is a modular Infrastructure as Code project demonstrating
 secure Azure infrastructure design, reusable Terraform modules,
 automated security controls and CI/CD validation.
 
-It is designed for local evaluation without provisioning Azure resources.
+It supports local validation and an Azure deployment split into Foundation and Integrated configurations.
 
 ## Architecture
 
@@ -21,10 +21,12 @@ integrated and developer-workload examples.
 | Key Vault | RBAC, secrets boundary, optional Storage CMK, private endpoints and DNS |
 | Monitoring | Log Analytics, diagnostic settings, alerts and Azure Monitor Private Link |
 | Compute | Hardened Linux VM, SSH authentication, Trusted Launch and managed identity |
-| Storage | Private Blob Storage, GRS, CMK, data-plane RBAC, diagnostics and Private Endpoint |
+| Storage | Private Blob Storage, regional redundancy, optional CMK, Entra ID, RBAC, diagnostics and Private Endpoint |
 
 - [Architecture documentation](docs/architecture/README.md)
 - [Architecture diagrams](docs/architecture/diagrams.md)
+- [Integrated deployment guide](docs/deployment.md)
+- [Foundation example](examples/foundation/main.tf)
 - [Integrated example](examples/integrated/main.tf)
 - [Developer workload example](examples/developer-workload/main.tf)
 
@@ -69,8 +71,9 @@ The project demonstrates least-privilege RBAC, managed identities,
 private networking, Key Vault purge protection, restricted public
 access, NSGs and automated security validation.
 
-These are configuration-level controls. They have not been
-verified through a live Azure deployment.
+The integrated deployment has been verified through Azure management APIs.
+Application-level private connectivity and alert delivery still require
+runtime verification from the connected VNet; see the deployment guide.
 
 ## Repository Structure
 
@@ -115,8 +118,8 @@ security review, network verification and cost assessment.
 | Monitoring | Terraform module implemented |
 | Compute | Terraform module implemented |
 | Storage | Hardened module with CMK, RBAC and diagnostics |
-| Integrated architecture | Configuration-level validation after hardening |
-| Live Azure deployment | Not performed |
+| Integrated architecture | Foundation reused; private Storage, Key Vault and monitoring deployed |
+| Live Azure deployment | Completed on 2026-11-18 under protected Free Trial credits |
 
 ## Author
 

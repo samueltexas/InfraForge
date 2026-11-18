@@ -95,7 +95,7 @@ run "creates_hardened_storage_account" {
   }
 
   assert {
-    condition     = azurerm_storage_account_queue_properties.this.logging[0].read && azurerm_storage_account_queue_properties.this.logging[0].write && azurerm_storage_account_queue_properties.this.logging[0].delete
+    condition     = azurerm_storage_account_queue_properties.this[0].logging[0].read && azurerm_storage_account_queue_properties.this[0].logging[0].write && azurerm_storage_account_queue_properties.this[0].logging[0].delete
     error_message = "Queue service read, write and delete logging must be enabled."
   }
   assert {
@@ -157,5 +157,40 @@ run "enables_customer_managed_encryption_when_configured" {
       var.storage_encryption_identity_id
     )
     error_message = "CMK must use the explicitly supplied encryption identity."
+  }
+}
+
+run "private_arm_deployment_preserves_security_and_auditing" {
+  command = plan
+  variables {
+    account_replication_type          = "LRS"
+    enable_legacy_queue_logging       = false
+    create_blob_private_dns_zone      = false
+    existing_blob_private_dns_zone_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-infraforge-test/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+  }
+  assert {
+    condition = (
+      azurerm_storage_account.this.default_to_oauth_authentication &&
+      !azurerm_storage_account.this.local_user_enabled &&
+      !azurerm_storage_account.this.shared_access_key_enabled &&
+      !azurerm_storage_account.this.public_network_access_enabled
+    )
+    error_message = "ARM deployment must retain Entra authentication and private-only access."
+  }
+  assert {
+    condition = (
+      length(azurerm_storage_account_queue_properties.this) == 0 &&
+      length(azurerm_monitor_diagnostic_setting.queue[0].enabled_log) == 3 &&
+      azurerm_monitor_diagnostic_setting.queue[0].log_analytics_workspace_id == var.log_analytics_workspace_id
+    )
+    error_message = "Queue auditing must use the existing workspace without legacy data-plane operations."
+  }
+  assert {
+    condition = (
+      length(azurerm_private_dns_zone.blob) == 0 &&
+      length(azurerm_private_dns_zone_virtual_network_link.blob) == 0 &&
+      azurerm_private_endpoint.blob.private_dns_zone_group[0].private_dns_zone_ids[0] == var.existing_blob_private_dns_zone_id
+    )
+    error_message = "The endpoint must reuse the shared DNS zone without creating duplicate zones or links."
   }
 }

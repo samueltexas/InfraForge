@@ -33,7 +33,7 @@ class IntegratedArchitectureTests(unittest.TestCase):
     def test_required_modules_exist(self):
         self.assertEqual(
             set(self.modules),
-            {"resource_group", "networking", "identity", "keyvault", "monitoring", "storage"},
+            {"keyvault", "monitoring", "storage"},
         )
 
     def test_modules_use_local_sources(self):
@@ -48,12 +48,12 @@ class IntegratedArchitectureTests(unittest.TestCase):
 
         self.assertEqual(
             keyvault["virtual_network_id"],
-            "${module.networking.vnet_id}",
+            "${data.azurerm_virtual_network.foundation.id}",
         )
 
         self.assertEqual(
             keyvault["private_endpoint_subnet_id"],
-            '${module.networking.subnet_ids["private-endpoints"]}',
+            '${data.azurerm_subnet.private_endpoints.id}',
         )
 
     def test_keyvault_uses_managed_identity(self):
@@ -61,7 +61,7 @@ class IntegratedArchitectureTests(unittest.TestCase):
 
         self.assertEqual(
             keyvault["reader_principal_ids"],
-            ["${module.identity.principal_id}"],
+            ["${data.azurerm_user_assigned_identity.foundation.principal_id}"],
         )
 
     def test_monitoring_uses_keyvault_resource_id(self):
@@ -82,21 +82,22 @@ class IntegratedArchitectureTests(unittest.TestCase):
 
         self.assertEqual(
             monitoring["virtual_network_id"],
-            "${module.networking.vnet_id}",
+            "${data.azurerm_virtual_network.foundation.id}",
         )
 
         self.assertEqual(
             monitoring["private_endpoint_subnet_id"],
-            '${module.networking.subnet_ids["private-endpoints"]}',
+            '${data.azurerm_subnet.private_endpoints.id}',
         )
 
-    def test_networking_has_private_endpoint_subnet(self):
-        networking = self.modules["networking"]
-
-        self.assertIn(
-            "private-endpoints",
-            networking["subnets"],
-        )
+    def test_foundation_is_referenced_without_recreation(self):
+        data = {}
+        for block in self.configuration.get("data", []):
+            data.update(block)
+        self.assertEqual(data["azurerm_subnet"]["private_endpoints"]["name"], "private-endpoints")
+        self.assertIn("azurerm_virtual_network", data)
+        self.assertIn("azurerm_user_assigned_identity", data)
+        self.assertIn("azurerm_resource_group", data)
 
     def test_no_static_keyvault_reader_identity(self):
         keyvault = self.modules["keyvault"]

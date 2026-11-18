@@ -2,14 +2,14 @@ locals {
   blob_private_dns_zone_name = "privatelink.blob.core.windows.net"
 
   blob_private_dns_zone_id = (
-    var.existing_blob_private_dns_zone_id != null
-    ? var.existing_blob_private_dns_zone_id
-    : azurerm_private_dns_zone.blob[0].id
+    var.create_blob_private_dns_zone
+    ? azurerm_private_dns_zone.blob[0].id
+    : var.existing_blob_private_dns_zone_id
   )
 }
 
 resource "azurerm_storage_account" "this" {
-  #checkov:skip=CKV_AZURE_33: Queue logging is configured with the dedicated azurerm_storage_account_queue_properties resource below.
+  #checkov:skip=CKV_AZURE_33: Queue audit logging uses legacy analytics or Azure Monitor diagnostics, selected by enable_legacy_queue_logging.
   name                = var.storage_account_name
   resource_group_name = var.resource_group_name
   location            = var.location
@@ -24,6 +24,8 @@ resource "azurerm_storage_account" "this" {
   allow_nested_items_to_be_public   = false
   public_network_access_enabled     = false
   shared_access_key_enabled         = false
+  default_to_oauth_authentication   = true
+  local_user_enabled                = false
   infrastructure_encryption_enabled = true
 
   # Customer-managed encryption is optional.
@@ -83,6 +85,8 @@ resource "azurerm_role_assignment" "blob_data_contributor" {
 
 # Queue logging uses the dedicated resource supported by current AzureRM 4.x.
 resource "azurerm_storage_account_queue_properties" "this" {
+  count = var.enable_legacy_queue_logging ? 1 : 0
+
   storage_account_id = azurerm_storage_account.this.id
 
   logging {
@@ -105,7 +109,7 @@ resource "azurerm_storage_container" "this" {
 
 # Create a DNS zone only when the caller has not supplied a shared zone.
 resource "azurerm_private_dns_zone" "blob" {
-  count = var.existing_blob_private_dns_zone_id == null ? 1 : 0
+  count = var.create_blob_private_dns_zone ? 1 : 0
 
   name                = local.blob_private_dns_zone_name
   resource_group_name = var.resource_group_name
@@ -113,11 +117,11 @@ resource "azurerm_private_dns_zone" "blob" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
-  count = var.existing_blob_private_dns_zone_id == null ? 1 : 0
+  count = var.create_blob_private_dns_zone ? 1 : 0
 
   name                  = "link-${var.storage_account_name}-blob"
   resource_group_name   = var.resource_group_name
-  private_dns_zone_name = local.blob_private_dns_zone_name
+  private_dns_zone_name = azurerm_private_dns_zone.blob[0].name
   virtual_network_id    = var.virtual_network_id
   registration_enabled  = false
   tags                  = var.tags
@@ -152,6 +156,32 @@ resource "azurerm_monitor_diagnostic_setting" "blob" {
 
   dynamic "enabled_log" {
     for_each = var.blob_log_categories
+    content {
+      category = enabled_log.value
+    }
+  }
+
+  enabled_metric {
+    category = "Transaction"
+  }
+}
+
+# Preserve the address of legacy logging for existing module consumers.
+moved {
+  from = azurerm_storage_account_queue_properties.this
+  to   = azurerm_storage_account_queue_properties.this[0]
+}
+
+# ARM-managed diagnostics work without exposing the private Queue data plane.
+resource "azurerm_monitor_diagnostic_setting" "queue" {
+  count = var.enable_legacy_queue_logging ? 0 : 1
+
+  name                       = "${var.storage_account_name}-queue-diagnostics"
+  target_resource_id         = "${azurerm_storage_account.this.id}/queueServices/default"
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  dynamic "enabled_log" {
+    for_each = toset(["StorageRead", "StorageWrite", "StorageDelete"])
     content {
       category = enabled_log.value
     }

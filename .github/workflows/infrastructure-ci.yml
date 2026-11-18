@@ -70,6 +70,8 @@ jobs:
             run_tests: false
           - target: examples/monitoring
             run_tests: false
+          - target: examples/foundation
+            run_tests: false
           - target: examples/integrated
             run_tests: false
           - target: examples/developer-workload
@@ -203,6 +205,7 @@ jobs:
           - examples/identity
           - examples/keyvault
           - examples/monitoring
+          - examples/foundation
           - examples/integrated
           - examples/developer-workload
 
