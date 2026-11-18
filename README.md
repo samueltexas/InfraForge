@@ -45,6 +45,25 @@ Captured for commit `3808591`; the badge above tracks the current main branch.
 
 </details>
 
+## Reuse and operational maturity
+
+A published [v1.0.0 release](https://github.com/samueltexas/InfraForge/releases/tag/v1.0.0)
+is available. Pin consumers with a source such as
+`git::https://github.com/samueltexas/InfraForge.git//modules/storage?ref=v1.0.0`.
+The live deployment uses newer commits on `main`; breaking changes are listed in
+[CHANGELOG](CHANGELOG.md) and are pending a major release, not silently included
+in v1.0.0. See the [versioning policy](docs/versioning.md).
+
+- [Testing boundaries](docs/testing/README.md): structural Python tests plus 40
+  native Terraform plan tests with mocked providers; not automated Azure E2E tests.
+- [Operations](docs/operations/README.md): local read-only drift detection and cost
+  review procedure. Scheduled drift and automated cost estimation are not active.
+- [Remote state migration design](docs/operations/remote-state.md): lease locking,
+  environment isolation and Entra OIDC. The deployed demonstration still uses
+  local state; it is not yet a shared-team backend.
+- [Why custom modules instead of AVM](docs/architecture/decisions/0002-custom-modules-and-avm.md):
+  a deliberate design demonstration with a maintenance cost, not a vendor replacement.
+
 ## Engineering decisions to review
 
 - **State ownership:** separate Foundation and Integrated states; deployed network
