@@ -47,12 +47,11 @@ Captured for commit `3808591`; the badge above tracks the current main branch.
 
 ## Reuse and operational maturity
 
-A published [v1.0.0 release](https://github.com/samueltexas/InfraForge/releases/tag/v1.0.0)
-is available. Pin consumers with a source such as
-`git::https://github.com/samueltexas/InfraForge.git//modules/storage?ref=v1.0.0`.
-The live deployment uses newer commits on `main`; breaking changes are listed in
-[CHANGELOG](CHANGELOG.md) and are pending a major release, not silently included
-in v1.0.0. See the [versioning policy](docs/versioning.md).
+The current release is [v2.0.0](https://github.com/samueltexas/InfraForge/releases/tag/v2.0.0). Pin consumers with a source such as
+`git::https://github.com/samueltexas/InfraForge.git//modules/storage?ref=v2.0.0`.
+Breaking changes since v1.0.0 are listed in [CHANGELOG](CHANGELOG.md).
+Existing consumers must review the migration notes before upgrading. The original
+v1.0.0 tag is unchanged. See the [versioning policy](docs/versioning.md).
 
 - [Testing boundaries](docs/testing/README.md): structural Python tests plus 40
   native Terraform plan tests with mocked providers; not automated Azure E2E tests.

@@ -4,14 +4,15 @@ Author: Samuel Texa
 
 ## Published contract
 
-The repository already publishes [v1.0.0](https://github.com/samueltexas/InfraForge/releases/tag/v1.0.0).
+The current release is [v2.0.0](https://github.com/samueltexas/InfraForge/releases/tag/v2.0.0).
+The original v1.0.0 release remains available and unchanged.
 Tags are immutable. Never move an existing tag to newer deployment code.
 Every module shares the repository version; the module subdirectory appears
 before the `?ref=` query in a Terraform Git source:
 
 ```hcl
 module "storage" {
-  source = "git::https://github.com/samueltexas/InfraForge.git//modules/storage?ref=v1.0.0"
+  source = "git::https://github.com/samueltexas/InfraForge.git//modules/storage?ref=v2.0.0"
   # Supply the required inputs from that release's variables.tf.
 }
 ```
@@ -28,8 +29,9 @@ stable consumer deployment.
 - MAJOR: removed/renamed inputs or outputs, incompatible defaults, state ownership
   changes, or behavior that requires consumer migration.
 
-See [CHANGELOG](../CHANGELOG.md). The current unreleased changes require a major
-release; they must not be relabeled as a compatible `v1.0.1` or `v1.1.0`.
+See [CHANGELOG](../CHANGELOG.md). Version 2.0.0 includes incompatible defaults
+and state-ownership changes; it is not a compatible 1.x update.
+Future compatible features use 2.1.0, 2.2.0; compatible fixes use 2.0.1.
 
 ## Release checklist
 
@@ -41,5 +43,7 @@ release; they must not be relabeled as a compatible `v1.0.1` or `v1.1.0`.
    notes linked to the changelog. Never overwrite a released tag.
 5. Verify `//modules/<name>?ref=<tag>` resolves to the intended source.
 
-The next major release is intentionally not published before its upgrade behavior
-is validated. The live demonstration and the published reusable release are distinct.
+Release 2.0.0 is validated by module plan tests, CI and a no-change plan against
+the existing v2 demonstration deployment. Migration of an arbitrary v1 Azure state
+is not claimed as tested: consumers must review the breaking changes and validate
+their own upgrade plan, especially when changing resource ownership.

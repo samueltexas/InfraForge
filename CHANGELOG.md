@@ -3,11 +3,14 @@
 All notable consumer-facing changes are recorded here. InfraForge uses repository-wide
 Semantic Versioning: one tag versions all modules and examples. Author: Samuel Texa.
 
-## Unreleased — next major release
+## Unreleased
 
-These changes are on `main`, not in the published `v1.0.0` release. Do not describe
-`main` as a released version. A major release is required before publishing this
-set because existing consumers can observe breaking configuration changes.
+No changes recorded yet.
+
+## [2.0.0] — 2026-11-18
+
+Major release: the changes below can affect existing consumers. Read the migration
+notes and review a fresh plan before upgrading from v1.0.0.
 
 ### Breaking changes and migration
 
@@ -51,3 +54,4 @@ regression checks, Checkov, TFLint and OPA. This release predates the live Azure
 deployment and the subsequent fixes listed above.
 
 [1.0.0]: https://github.com/samueltexas/InfraForge/releases/tag/v1.0.0
+[2.0.0]: https://github.com/samueltexas/InfraForge/releases/tag/v2.0.0
