@@ -20,6 +20,24 @@ tenant, principal identifiers and private account details omitted. It records
 checks, timestamps and resource names. It is an operator-captured snapshot,
 not independent certification or a continuous uptime guarantee.
 
+## Verified CI result
+
+[Run #44](https://github.com/samueltexas/InfraForge/actions/runs/44394995811)
+completed successfully for commit `3808591`: **31 jobs passed**. This includes
+Checkov, Python/OPA, formatting, 14 Terraform targets and 14 TFLint targets.
+The local Checkov 3.4.5 scan reported 122 passed, zero failed and eight skipped
+checks. Exceptions remain visible in source and the redundancy ADR.
+
+- [GitHub API result](2026-11-18/ci-verification.json)
+- Screenshot below: an unedited browser capture of the successful run summary.
+  It is CI evidence, not an Azure portal screenshot.
+
+![GitHub Actions run 44 succeeded](2026-11-18/ci-success.jpg)
+
+GitHub also reports non-failing Node.js 20 action-runtime deprecation warnings.
+The runner executes those pinned actions on Node.js 24; updating action versions
+is a future maintenance task. A successful run does not imply zero warnings.
+
 ## Reproduce the verification
 
 With Azure CLI authenticated to the intended subscription:

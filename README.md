@@ -35,6 +35,16 @@ Application Blob read/write from the VNet, alert delivery and disaster recovery
 are not yet demonstrated. The compute module is implemented but no VM is deployed
 in this environment. These boundaries are explicit to keep the evidence credible.
 
+<details>
+<summary>View the successful GitHub Actions run</summary>
+
+[31 jobs passed — run #44](https://github.com/samueltexas/InfraForge/actions/runs/44394995811).
+Captured for commit `3808591`; the badge above tracks the current main branch.
+
+![Verified GitHub Actions success](docs/evidence/2026-11-18/ci-success.jpg)
+
+</details>
+
 ## Engineering decisions to review
 
 - **State ownership:** separate Foundation and Integrated states; deployed network
