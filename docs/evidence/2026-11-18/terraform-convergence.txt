@@ -1,0 +1,9 @@
+InfraForge — 2026-11-18 UTC
+Command: terraform -chdir=examples/integrated plan -input=false -no-color -detailed-exitcode
+Exit code: 0
+Excerpt (resource IDs and refresh lines omitted):
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.

@@ -1,12 +1,53 @@
 # InfraForge
 
-**Secure Azure Infrastructure as Code | Terraform | DevSecOps | Automated Testing**
+[![Infrastructure CI](https://github.com/samueltexas/InfraForge/actions/workflows/infrastructure-ci.yml/badge.svg?branch=main)](https://github.com/samueltexas/InfraForge/actions/workflows/infrastructure-ci.yml)
 
-InfraForge is a modular Infrastructure as Code project demonstrating
-secure Azure infrastructure design, reusable Terraform modules,
-automated security controls and CI/CD validation.
+**Azure Infrastructure as Code · Private networking · Identity-first security · Policy as code**
 
-It supports local validation and an Azure deployment split into Foundation and Integrated configurations.
+InfraForge is a working Azure infrastructure demonstration built and maintained
+by **Samuel Texa**. It combines seven reusable Terraform modules with automated
+security checks and an independently verifiable deployment record.
+
+## Deployed on Azure
+
+The Foundation and Integrated environments were deployed on **18 November 2026**.
+The final apply created 10 missing resources without changing or destroying
+existing resources. Terraform subsequently reported **no changes**. Azure
+management APIs confirm the Storage Account is provisioned, private endpoints
+are approved, containers are private, and scoped RBAC and diagnostics are present.
+
+- **55 Terraform-managed resources:** 23 in Foundation and 32 in Integrated.
+- **Private access:** Key Vault, Blob Storage and Azure Monitor private endpoints;
+  shared DNS zones avoid duplicate ownership.
+- **Identity-first Storage:** Entra ID default, Shared Key and local users disabled,
+  container-scoped managed-identity permissions and infrastructure encryption.
+- **Recovery controls:** blob versioning and 14-day soft deletion; LRS limitations
+  are recorded in an architecture decision rather than hidden.
+- **Cost control:** protected Free Trial credits, with the spending limit kept on.
+  This is a credit-funded demonstration, not an always-free production platform.
+
+**Review the evidence:** [Azure verification and CI history](docs/evidence/README.md)
+· [Deployment runbook](docs/deployment.md)
+· [Storage redundancy decision](docs/architecture/decisions/0001-demo-storage-redundancy.md)
+
+The infrastructure is deployed and its management-plane configuration is working.
+Application Blob read/write from the VNet, alert delivery and disaster recovery
+are not yet demonstrated. The compute module is implemented but no VM is deployed
+in this environment. These boundaries are explicit to keep the evidence credible.
+
+## Engineering decisions to review
+
+- **State ownership:** separate Foundation and Integrated states; deployed network
+  and identity resources are referenced rather than recreated.
+- **Safe recovery from a partial apply:** regional SKU discovery, state backups,
+  reviewed fresh plans, no unplanned replacements and post-apply convergence.
+- **Private provisioning:** management-plane operations allow deployment without
+  temporarily exposing Storage or enabling account keys.
+- **Quality gates:** Terraform validation and native tests, Python regression
+  tests, TFLint, Checkov and OPA run in GitHub Actions. CI validates infrastructure;
+  it does not automatically apply changes to Azure.
+- **Documented tradeoffs:** the LRS security-policy exception applies only to the
+  integrated demonstration. The reusable Storage module retains its GRS default.
 
 ## Architecture
 

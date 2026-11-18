@@ -97,6 +97,7 @@ module "monitoring" {
 
 # Private application data storage.
 module "storage" {
+  #checkov:skip=CKV_AZURE_206: Credit-funded demonstration uses regional LRS without zone/region disaster recovery. Production requires reviewed ZRS/GRS. See docs/architecture/decisions/0001-demo-storage-redundancy.md.
   source = "../../modules/storage"
 
   storage_account_name = "stinfraforgeint01"
