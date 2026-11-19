@@ -109,3 +109,5 @@ URL, not an Azure login, email, tenant or subscription identifier. Earlier Git h
 may retain resource labels; no state values or credentials were intentionally published.
 
 Post-migration normal plans: [Foundation](2026-11-19/foundation-operator-plan.json) and [Integrated](2026-11-19/integrated-operator-plan.json), both exit 0 with no resource actions. Refreshed state differences count provider-observed state changes; it is not a count of planned infrastructure changes. These plans did not persist refresh updates through an apply.
+
+The [2026-11-19 GitHub export](2026-11-19/github-verification.json) records successful static CI and actual OIDC-authenticated Azure plans. [Foundation](2026-11-19/foundation-github-plan.json) and [Integrated](2026-11-19/integrated-github-plan.json) both returned exit 0. These exports preserve the commit and capture time after Actions artifacts expire. [Backend controls](2026-11-19/backend-controls.json) and [application controls](2026-11-19/azure-verification.json) were separately re-read from Azure.

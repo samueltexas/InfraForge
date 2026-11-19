@@ -1,0 +1,96 @@
+{
+  "captured_at_utc": "2026-11-19T02:27:05.049336+00:00",
+  "source": "Read-only Azure CLI and ARM queries; identifiers and account details omitted",
+  "scope": "Management-plane evidence; not an application availability or disaster recovery test",
+  "checks": {
+    "storage_provisioned": true,
+    "public_access_disabled": true,
+    "shared_key_disabled": true,
+    "local_users_disabled": true,
+    "entra_default": true,
+    "infrastructure_encryption": true,
+    "private_containers": true,
+    "container_scoped_rbac": true,
+    "private_endpoints_approved": true,
+    "private_dns_record_present": true,
+    "audit_logs_enabled": true,
+    "spending_limit_on": true
+  },
+  "storage": {
+    "name": "<application-storage>",
+    "region": "polandcentral",
+    "sku": "Standard_LRS",
+    "tls": "TLS1_2",
+    "key_source": "Microsoft.Storage",
+    "versioning": true,
+    "blob_retention_days": 14,
+    "container_retention_days": 14
+  },
+  "containers": [
+    "application-data",
+    "audit-logs",
+    "backup-data"
+  ],
+  "rbac_container_scopes": [
+    "application-data",
+    "audit-logs",
+    "backup-data"
+  ],
+  "endpoints": [
+    {
+      "name": "<blob-endpoint>",
+      "state": "Succeeded",
+      "connections": [
+        "Approved"
+      ]
+    },
+    {
+      "name": "<monitor-endpoint>",
+      "state": "Succeeded",
+      "connections": [
+        "Approved"
+      ]
+    },
+    {
+      "name": "<keyvault-endpoint>",
+      "state": "Succeeded",
+      "connections": [
+        "Approved"
+      ]
+    }
+  ],
+  "diagnostics": {
+    "blobServices": [
+      {
+        "name": "<blobServices-diagnostics>",
+        "workspace": "<monitoring-workspace>",
+        "enabled_logs": [
+          "StorageDelete",
+          "StorageRead",
+          "StorageWrite"
+        ],
+        "enabled_metrics": [
+          "Transaction"
+        ]
+      }
+    ],
+    "queueServices": [
+      {
+        "name": "<queueServices-diagnostics>",
+        "workspace": "<monitoring-workspace>",
+        "enabled_logs": [
+          "StorageDelete",
+          "StorageRead",
+          "StorageWrite"
+        ],
+        "enabled_metrics": [
+          "Transaction"
+        ]
+      }
+    ]
+  },
+  "subscription": {
+    "offer": "FreeTrial_2014-09-01",
+    "spending_limit": "On"
+  }
+}

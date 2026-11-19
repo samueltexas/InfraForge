@@ -1,0 +1,14 @@
+{
+  "captured_at_utc": "2026-11-19T02:26:34.586010+00:00",
+  "configuration_commit": "c643abc22690339c537e23ebef0e48c82bdef2fc",
+  "stack": "foundation",
+  "exit_code": 0,
+  "status": "no_changes",
+  "changes": {
+    "create": 0,
+    "update": 0,
+    "delete": 0
+  },
+  "stage": "complete",
+  "state_drift_resources": 17
+}
