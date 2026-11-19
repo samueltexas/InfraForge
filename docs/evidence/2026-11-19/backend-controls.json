@@ -1,0 +1,24 @@
+{
+  "captured_at_utc": "2026-11-19T02:28:05.960014+00:00",
+  "source": "Allowlisted Azure management-plane fields; account and identity identifiers omitted",
+  "checks": {
+    "provisioned": true,
+    "shared_key_disabled": true,
+    "anonymous_blob_disabled": true,
+    "local_users_disabled": true,
+    "entra_default": true,
+    "https_only": true,
+    "tls_1_2": true,
+    "infrastructure_encryption": true,
+    "versioning": true,
+    "blob_soft_delete_30_days": true,
+    "container_soft_delete_30_days": true,
+    "deletion_lock": true,
+    "plan_roles_scoped": true,
+    "oidc_environments": true
+  },
+  "region": "polandcentral",
+  "sku": "Standard_LRS",
+  "public_endpoint": "Enabled",
+  "boundary": "Resource Reader plus state-container data contributor; authenticated public backend endpoint for hosted runners"
+}

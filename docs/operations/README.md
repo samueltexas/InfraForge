@@ -25,8 +25,8 @@ discards captured output. Investigate failures in a protected terminal.
 
 The scheduled workflow uses a normal desired-configuration plan with detailed
 exit codes, per-stack concurrency and lease locking. Code 2 fails drift monitoring;
-in PRs it is reported as a proposed change. Metadata-only state differences are
-reported separately. It never auto-applies. See [remote state and OIDC](remote-state.md).
+in PRs it is reported as a proposed change. Refreshed state differences are
+reported separately; this count alone does not classify their cause. It never auto-applies. See [remote state and OIDC](remote-state.md).
 
 ## Cost estimation and controls
 

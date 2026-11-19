@@ -31,7 +31,7 @@ are operator-exported records, not independent cloud attestation.
 | Azure deployment | 2026-11-18: 55 managed instances across Foundation (23) and Integrated (32) | [Azure snapshot and state address lists](docs/evidence/README.md) |
 | State backend | 2026-11-19: migrated to separate Blob keys with Entra ID and lease locking | [Migration record](docs/evidence/2026-11-19/state-migration.json) · [ADR](docs/architecture/decisions/0004-remote-state-migration.md) |
 | Validation | 2026-11-18: 31 CI jobs passed; 40 native Terraform plan runs use mocked providers | [Committed CI export](docs/evidence/2026-11-18/ci-verification.json) · [Test boundaries](docs/testing/README.md) |
-| Live plans and drift | OIDC workflow for trusted PRs and daily checks; no automatic apply | [Workflow](.github/workflows/azure-plan.yml) · [Operations](docs/operations/README.md) |
+| Live plans and drift | 2026-11-19: both OIDC Azure plans passed with no changes; daily schedule configured | [Committed results](docs/evidence/2026-11-19/github-verification.json) · [Operations](docs/operations/README.md) |
 
 Counts describe the dated snapshot, not a permanent guarantee. CI proves code
 validation; Azure API exports and Terraform output provide separate deployment
