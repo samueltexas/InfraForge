@@ -10,14 +10,16 @@ changed zero resources and destroyed zero resources. A subsequent refreshed
 Terraform plan reported no changes; the same check was repeated during CI triage.
 
 - [Redacted Azure verification snapshot](2026-11-18/azure-verification.json)
+- [Foundation state addresses](2026-11-18/foundation-state-list.txt)
+- [Integrated state addresses](2026-11-18/integrated-state-list.txt)
 - [Terraform convergence excerpt](2026-11-18/terraform-convergence.txt)
 - [Deployment configuration commit](https://github.com/samueltexas/InfraForge/commit/ffdb9d4eadc701958db7d77e6fe1a125366b1751)
 - [Deployment procedure and cost constraints](../deployment.md)
 - [Scoped redundancy decision](../architecture/decisions/0001-demo-storage-redundancy.md)
 
 The JSON snapshot is generated from real Azure API responses, with subscription,
-tenant, principal identifiers and private account details omitted. It records
-checks, timestamps and resource names. It is an operator-captured snapshot,
+tenant, principal identifiers and private account details omitted. Resource/account
+names are replaced by logical labels. It records checks and timestamps. It is an operator-captured snapshot,
 not independent certification or a continuous uptime guarantee.
 
 ## Verified CI result
@@ -49,8 +51,8 @@ terraform -chdir=examples/integrated plan -input=false -detailed-exitcode
 ```
 
 The script only reads Azure resources. Exit code 0 means all recorded checks
-passed; it does not modify infrastructure. The Terraform command requires the
-original local state, which is intentionally excluded from Git. Exit code 0
+passed; it does not modify infrastructure. The Terraform command requires authorized access to the remote backend. State
+values are intentionally excluded from Git. Exit code 0
 means no pending changes; 2 means differences; 1 means an error.
 
 ## CI incident and resolution
@@ -86,7 +88,24 @@ container-scoped RBAC and Blob/Queue diagnostics. The spending limit remains on.
 - Actual log ingestion and end-to-end alert delivery. The action group currently
   has no email receivers.
 - Restore drills, regional disaster recovery, availability SLA or load tests.
-- Production remote-state collaboration; this demonstration uses protected local
-  state backups. A production rollout needs a secured remote backend and locking.
+- Production environment isolation and recovery drills. Development states were
+  migrated to Azure Blob on 2026-11-19; production has not been deployed.
 
 No VM or paid connectivity service was created only to produce evidence.
+
+## Remote-state milestone — 2026-11-19
+
+[Migration comparison](2026-11-19/state-migration.json) records preservation of
+lineage, all resources and all outputs. It contains no state values or raw IDs.
+The state address exports in the 2026-11-18 directory were exported on 2026-11-19
+from the protected pre-migration snapshot; their headers make that timing explicit.
+
+Public snapshots are operator-exported evidence reproducible from the runbook,
+not independent attestation of a subscription a third party cannot access.
+Actions run links may expire under GitHub retention settings. Committed sanitized
+records remain available in Git; screenshots are supplementary, not deployment proof.
+The CI screenshot contains only the public GitHub handle already in the repository
+URL, not an Azure login, email, tenant or subscription identifier. Earlier Git history
+may retain resource labels; no state values or credentials were intentionally published.
+
+Post-migration normal plans: [Foundation](2026-11-19/foundation-operator-plan.json) and [Integrated](2026-11-19/integrated-operator-plan.json), both exit 0 with no resource actions. Refreshed state differences count provider-observed state changes; it is not a count of planned infrastructure changes. These plans did not persist refresh updates through an apply.

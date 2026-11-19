@@ -287,10 +287,14 @@ class InfrastructureContractTests(unittest.TestCase):
                     f"Unexpected arguments for {name}: {unexpected}",
                 )
 
-    def test_integrated_example_has_no_backend_configuration(self):
-        for document in load_integrated_configuration():
-            for block in document.get("terraform", []):
-                self.assertNotIn("backend", block)
+    def test_integrated_backend_uses_entra_authentication(self):
+        backends = [backend for document in load_integrated_configuration()
+                    for block in document.get("terraform", [])
+                    for backend in block.get("backend", [])]
+        self.assertEqual(len(backends), 1)
+        self.assertTrue(backends[0]["azurerm"]["use_azuread_auth"])
+        self.assertNotIn("access_key", backends[0]["azurerm"])
+        self.assertNotIn("sas_token", backends[0]["azurerm"])
 
     def test_integrated_example_does_not_create_resources_directly(self):
         for document in load_integrated_configuration():

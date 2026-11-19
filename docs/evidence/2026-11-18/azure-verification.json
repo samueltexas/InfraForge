@@ -1,6 +1,6 @@
 {
   "captured_at_utc": "2026-11-18T20:48:13.863423+00:00",
-  "source": "Read-only Azure CLI and ARM queries; identifiers and account details omitted",
+  "source": "Read-only Azure CLI and ARM queries; identifiers and account details omitted; resource/account names replaced with logical labels",
   "scope": "Management-plane evidence; not an application availability or disaster recovery test",
   "checks": {
     "storage_provisioned": true,
@@ -17,7 +17,7 @@
     "spending_limit_on": true
   },
   "storage": {
-    "name": "stinfraforgeint01",
+    "name": "<application-storage>",
     "region": "polandcentral",
     "sku": "Standard_LRS",
     "tls": "TLS1_2",
@@ -38,21 +38,21 @@
   ],
   "endpoints": [
     {
-      "name": "pe-stinfraforgeint01-blob",
+      "name": "<blob-endpoint>",
       "state": "Succeeded",
       "connections": [
         "Approved"
       ]
     },
     {
-      "name": "pe-infraforge-monitoring",
+      "name": "<monitor-endpoint>",
       "state": "Succeeded",
       "connections": [
         "Approved"
       ]
     },
     {
-      "name": "kv-infraforge-int-dev-pe",
+      "name": "<keyvault-endpoint>",
       "state": "Succeeded",
       "connections": [
         "Approved"
@@ -62,8 +62,8 @@
   "diagnostics": {
     "blobServices": [
       {
-        "name": "stinfraforgeint01-blob-diagnostics",
-        "workspace": "law-infraforge-integrated-dev",
+        "name": "<blobServices-diagnostics>",
+        "workspace": "<monitoring-workspace>",
         "enabled_logs": [
           "StorageDelete",
           "StorageRead",
@@ -76,8 +76,8 @@
     ],
     "queueServices": [
       {
-        "name": "stinfraforgeint01-queue-diagnostics",
-        "workspace": "law-infraforge-integrated-dev",
+        "name": "<queueServices-diagnostics>",
+        "workspace": "<monitoring-workspace>",
         "enabled_logs": [
           "StorageDelete",
           "StorageRead",

@@ -1,0 +1,14 @@
+{
+  "captured_at_utc": "2026-11-19T02:24:19.366853+00:00",
+  "configuration_commit": "operator-working-tree",
+  "stack": "integrated",
+  "exit_code": 0,
+  "status": "no_changes",
+  "changes": {
+    "create": 0,
+    "update": 0,
+    "delete": 0
+  },
+  "stage": "complete",
+  "state_drift_resources": 3
+}

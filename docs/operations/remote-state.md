@@ -1,84 +1,84 @@
-# Remote state and identity runbook
+# Remote state and OIDC operations
 
 Author: Samuel Texa
 
-## Current status
+## Implemented development backend — 2026-11-19
 
-The demonstration still uses separate local Foundation and Integrated states.
-It is not yet configured for concurrent team operation. The steps below are a
-migration design, not evidence that remote state or OIDC is active.
+Foundation and Integrated now use an independent Azure Blob backend, with separate
+keys and preserved state identities. [ADR 0004](../architecture/decisions/0004-remote-state-migration.md)
+records the migration, network tradeoff and security boundaries.
 
-## Target design
+The account has Entra-only authorization, infrastructure encryption, versioning,
+30-day Blob/container soft deletion and a deletion lock. State operations use
+Blob leases. The application's private Storage Account is not the backend.
 
-Use a dedicated Azure Storage Account for state, separate from application data
-and from the lifecycle of either stack. Disable Shared Key and public Blob access;
-enable versioning and soft delete. For private networking, run Terraform on a
-runner that can resolve and reach the backend private endpoint. A GitHub-hosted
-runner does not automatically reach this VNet. Do not open the account publicly
-just to make CI work.
+## Bootstrap a separate environment
 
-Use separate subscriptions/accounts or containers and identities for development
-and production. Different Blob keys alone are organizational separation, not an
-RBAC security boundary. Within each environment use distinct keys:
-`foundation.tfstate` and `integrated.tfstate`. No production environment exists yet.
+An Azure administrator can run the reviewed `bootstrap/state_backend.py` with
+`--subscription`, a globally unique `--account` and the exact GitHub subject prefix
+reported by `gh api repos/<owner>/<repo>/actions/oidc/customization/sub`.
+Defaults target this project's development demonstration; review all group,
+container and identity names before reuse. The script refuses a subscription
+without a spending limit and does not migrate states itself.
 
-The [azurerm backend](https://developer.hashicorp.com/terraform/language/backend/azurerm)
-uses Blob leases for state locking. Do not disable locking. A deployment identity
-needs Storage Blob Data Contributor scoped to its state container; resource
-permissions are separately scoped to its target environment. The drift identity
-needs resource Reader plus the minimum backend permissions needed to read and lock
-state; it must not have resource write permissions.
+Use independent identities and containers/accounts for production. The plan
+identity has Reader on the workload RG and Blob Data Contributor on only the
+state container for state reads and locking. It has no workload-write permission.
+These backend data permissions can modify state: protect the workflow and trusted
+contributors, not just the Azure resource role.
 
-## Secretless authentication
+## Initialize an authorized workstation
 
-Use Entra workload identity federation for GitHub Actions, with issuer
-`https://token.actions.githubusercontent.com`, audience `api://AzureADTokenExchange`
-and an exact subject such as `repo:samueltexas/InfraForge:environment:development`.
-Use a protected GitHub environment and restrict its deployment branches. Production
-must use a different identity and approvals. Do not use client secrets or storage
-keys. GitHub job permissions should be `contents: read` and `id-token: write`.
+The committed roots contain a partial backend with `use_azuread_auth = true`.
+Obtain backend identifiers from the environment administrator; do not commit them
+or credentials. Log in with Azure CLI and select the intended subscription:
 
-An opt-in root backend block would be:
-
-```hcl
-terraform {
-  backend "azurerm" {}
-}
+```bash
+export ARM_SUBSCRIPTION_ID="<subscription>"
+export ARM_USE_CLI=true
+export ARM_USE_OIDC=false
+terraform -chdir=examples/foundation init \
+  -backend-config="storage_account_name=<backend-account>" \
+  -backend-config="container_name=<development-container>" \
+  -backend-config="key=foundation.tfstate"
+# Repeat for examples/integrated using key=integrated.tfstate.
 ```
 
-Example partial backend configuration (replace all placeholders):
+For an existing local state, first make protected backups, verify the remote key
+is empty and add `-migrate-state`. Review the prompt and compare lineage, resources
+and outputs after copying. Never use `-force-copy` or start with an empty state to
+bypass a conflict. For a new checkout with no local state, ordinary init connects
+to the existing backend. Do not migrate stale archived local states into live keys.
 
-```hcl
-storage_account_name = "<dedicated-state-account>"
-container_name       = "<environment-container>"
-key                  = "integrated.tfstate"
-use_azuread_auth     = true
-use_oidc             = true
-```
+## GitHub OIDC
 
-Supply `ARM_CLIENT_ID`, `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`,
-`ARM_USE_OIDC=true` and `ARM_USE_AZUREAD=true` through the protected job environment.
-GitHub's OIDC request variables are available to Terraform in an authorized job.
-Do not commit tokens, keys, state files or generated plans. For an interactive
-migration using Azure CLI, use the backend's CLI authentication instead of OIDC;
-do not combine an unavailable GitHub token flow with the local migration.
+The workflow uses ephemeral OIDC tokens with `ARM_USE_OIDC=true` and
+`ARM_USE_AZUREAD=true`. Environment secrets hold masked client/tenant/subscription
+IDs, backend location and expected state lineage; they are identifiers, not
+long-lived credentials. No access key or client secret is stored.
 
-## Migration procedure — not executed
+The Azure federated subjects use GitHub's current immutable repository prefix,
+not a guessed legacy `repo:owner/name` string. The two environments restrict
+allowed refs. Fork and Dependabot PRs run static CI but never authenticated plans.
+Only trusted same-repository code receives access to sensitive state.
 
-1. Provision and verify the dedicated backend, identity permissions, private DNS
-   and runner reachability separately; review costs under the existing constraint.
-2. Freeze writers. Back up both local states securely; record lineage, serial and
-   resource count. Verify the destination Blob is absent or explicitly reconciled.
-3. Add the backend block to one root and run `terraform init -migrate-state` with
-   that environment's configuration. Review Terraform's migration prompt. Never
-   use `-force-copy`, automatic approval or `state push` as a shortcut.
-4. Pull the remote state and verify lineage, resource addresses/count and outputs
-   match the source. Generate a fresh plan and require no unintended actions.
-5. Repeat for the other root with a different key. Test a controlled lease
-   contention: a second writer must wait or fail, not proceed concurrently.
-6. Enable team workflows only after validation; retain protected backups according
-   to the recovery policy. Do not delete the only known-good state copy.
+Scheduled drift runs from main daily at 06:17 UTC. Workflow dispatch can validate
+both states on demand. PR comments contain only status, commit and action counts;
+raw provider output, state and full plan JSON are not uploaded. Redacted summaries
+expire after 30 days; milestone evidence is separately exported into Git.
 
-If migration fails, stop writers and compare both states before reconfiguration.
-Never blindly copy an older state over newer remote state or force-unlock a live
-operation. Backend creation and migration have not been authorized by this review.
+## Apply and recovery
+
+The GitHub development-apply environment is configured with required owner review
+and administrator bypass disabled. No resource-write identity or apply workflow
+is connected to it yet. Application changes continue to require an authorized
+operator, a fresh reviewed plan and manual apply under the deployment runbook.
+
+A later deployment workflow needs a separately scoped write identity, reviewed
+RBAC-management permissions and protection against applying a stale/untrusted plan.
+Do not reuse the plan identity for deployments or grant it Contributor to fix a
+read-permission error.
+
+Preserve versioned state backups, freeze writers before recovery, verify lineage
+and resource addresses, and require a fresh no-change or explicitly reviewed plan.
+See [HashiCorp backend documentation](https://developer.hashicorp.com/terraform/language/backend/azurerm).

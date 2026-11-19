@@ -1,0 +1,25 @@
+{
+  "verified_at_utc": "2026-11-19T02:21:19.273102+00:00",
+  "source": "Operator-run comparison of protected pre-migration snapshots with terraform state pull from Azure Blob",
+  "stacks": {
+    "foundation": {
+      "key": "foundation.tfstate",
+      "managed_instances": 23,
+      "lineage_preserved": true,
+      "resources_preserved": true,
+      "outputs_preserved": true
+    },
+    "integrated": {
+      "key": "integrated.tfstate",
+      "managed_instances": 32,
+      "lineage_preserved": true,
+      "resources_preserved": true,
+      "outputs_preserved": true
+    }
+  },
+  "lease_contention_test": {
+    "result": "passed",
+    "method": "Acquire a 60-second Blob lease, confirm Terraform refuses plan with lock-timeout=0, release lease in finally block",
+    "terraform_error": "Error acquiring the state lock"
+  }
+}

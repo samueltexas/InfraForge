@@ -4,7 +4,8 @@ Author: Samuel Texa
 
 ## Published contract
 
-The current release is [v2.0.0](https://github.com/samueltexas/InfraForge/releases/tag/v2.0.0).
+Version 3.0.0 introduces the remote backend and authenticated operational workflows.
+The previous [v2.0.0](https://github.com/samueltexas/InfraForge/releases/tag/v2.0.0) remains available.
 The original v1.0.0 release remains available and unchanged.
 Tags are immutable. Never move an existing tag to newer deployment code.
 Every module shares the repository version; the module subdirectory appears
@@ -12,7 +13,7 @@ before the `?ref=` query in a Terraform Git source:
 
 ```hcl
 module "storage" {
-  source = "git::https://github.com/samueltexas/InfraForge.git//modules/storage?ref=v2.0.0"
+  source = "git::https://github.com/samueltexas/InfraForge.git//modules/storage?ref=v3.0.0"
   # Supply the required inputs from that release's variables.tf.
 }
 ```
@@ -31,7 +32,9 @@ stable consumer deployment.
 
 See [CHANGELOG](../CHANGELOG.md). Version 2.0.0 includes incompatible defaults
 and state-ownership changes; it is not a compatible 1.x update.
-Future compatible features use 2.1.0, 2.2.0; compatible fixes use 2.0.1.
+The v3 backend declaration requires migration for existing root consumers, so it
+receives a major version even though reusable module contracts are unchanged.
+Future compatible features use 3.1.0, 3.2.0; compatible fixes use 3.0.1.
 
 ## Release checklist
 

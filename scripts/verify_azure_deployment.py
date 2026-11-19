@@ -29,15 +29,15 @@ def main():
     for service in ['blobServices', 'queueServices']:
         entries = rest(sid + '/' + service + '/default/providers/Microsoft.Insights/diagnosticSettings', '2021-05-01-preview')['value']
         diagnostics[service] = [{
-            'name': d['name'],
-            'workspace': d['properties']['workspaceId'].split('/')[-1],
+            'name': '<' + service + '-diagnostics>',
+            'workspace': '<monitoring-workspace>',
             'enabled_logs': sorted(x['category'] for x in d['properties']['logs'] if x['enabled']),
             'enabled_metrics': sorted(x['category'] for x in d['properties']['metrics'] if x['enabled']),
         } for d in entries]
     endpoints = []
     for name in ['pe-stinfraforgeint01-blob', 'pe-infraforge-monitoring', 'kv-infraforge-int-dev-pe']:
         pe = az('network', 'private-endpoint', 'show', '-g', args.resource_group, '-n', name)
-        endpoints.append({'name': name, 'state': pe['provisioningState'], 'connections': [c['privateLinkServiceConnectionState']['status'] for c in pe['privateLinkServiceConnections']]})
+        endpoints.append({'name': '<' + ('blob' if name.startswith('pe-st') else 'monitor' if 'monitoring' in name else 'keyvault') + '-endpoint>', 'state': pe['provisioningState'], 'connections': [c['privateLinkServiceConnectionState']['status'] for c in pe['privateLinkServiceConnections']]})
     identity = az('identity', 'show', '-g', args.resource_group, '-n', 'id-infraforge-foundation-dev')
     roles = az('role', 'assignment', 'list', '--all')
     scopes = sorted(r['scope'].split('/')[-1] for r in roles if r['principalId'] == identity['principalId'] and r['roleDefinitionName'] == 'Storage Blob Data Contributor' and r['scope'].startswith(sid + '/blobServices/default/containers/'))
@@ -62,7 +62,7 @@ def main():
         'source': 'Read-only Azure CLI and ARM queries; identifiers and account details omitted',
         'scope': 'Management-plane evidence; not an application availability or disaster recovery test',
         'checks': checks,
-        'storage': {'name': sa['name'], 'region': sa['location'], 'sku': sa['sku']['name'], 'tls': sa['minimumTlsVersion'], 'key_source': sa['encryption']['keySource'], 'versioning': blob['isVersioningEnabled'], 'blob_retention_days': blob['deleteRetentionPolicy']['days'], 'container_retention_days': blob['containerDeleteRetentionPolicy']['days']},
+        'storage': {'name': '<application-storage>', 'region': sa['location'], 'sku': sa['sku']['name'], 'tls': sa['minimumTlsVersion'], 'key_source': sa['encryption']['keySource'], 'versioning': blob['isVersioningEnabled'], 'blob_retention_days': blob['deleteRetentionPolicy']['days'], 'container_retention_days': blob['containerDeleteRetentionPolicy']['days']},
         'containers': sorted(c['name'] for c in containers),
         'rbac_container_scopes': scopes,
         'endpoints': endpoints,

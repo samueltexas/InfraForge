@@ -6,9 +6,9 @@ Author: Samuel Texa
 
 `examples/foundation` owns the resource group, VNet, four subnets, NSGs,
 network rules and managed identity. `examples/integrated` references those
-resources and owns Key Vault, monitoring, DNS and Storage. Keep both local
-Terraform state files and their backups; neither state nor saved plans belong
-in Git. Never recreate the Foundation from the integrated configuration.
+resources and owns Key Vault, monitoring, DNS and Storage. Both states now use
+separate Azure Blob keys; keep protected recovery backups. Neither state nor
+saved plans belong in Git. Never recreate the Foundation from the integrated configuration.
 
 ## Storage configuration
 
@@ -61,6 +61,10 @@ Application-level private DNS resolution, Blob read/write and alert delivery
 require a client inside the connected VNet. Management-plane validation alone
 does not prove those runtime paths. No VM or paid connectivity service is added
 solely for verification.
+
+See the [remote backend runbook](operations/remote-state.md) for initialization
+and the migration completed on 2026-11-19. Existing local consumers must migrate
+with comparison and backup, not start with empty state.
 
 ## Deployment evidence — 2026-11-18
 

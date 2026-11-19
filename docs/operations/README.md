@@ -5,9 +5,9 @@ Author: Samuel Texa
 ## Status
 
 Azure provisioning and management-plane controls have recorded evidence.
-Continuous drift detection, automatic cost estimates, OIDC federation and a remote
-backend are not active. Runbooks and local read-only tooling do not imply these
-capabilities are deployed.
+The remote backend and OIDC plan identity are configured. The Azure Plan and Drift
+workflow runs for trusted same-repository PRs, workflow dispatch and daily at 06:17
+UTC. Automatic cost estimates and cloud apply automation remain disabled.
 
 ## Drift
 
@@ -23,10 +23,10 @@ Use a normal reviewed `terraform plan` for proposed configuration changes.
 Raw output may contain sensitive values; the command emits only a summary and
 discards captured output. Investigate failures in a protected terminal.
 
-After [remote state and OIDC](remote-state.md) are configured, schedule this check
-on a trusted private runner using a read-only resource identity. Use one concurrency
-group per environment/stack, keep locking enabled, and report drift as a distinct
-job outcome. Do not auto-apply a drift correction. No scheduled job is enabled yet.
+The scheduled workflow uses a normal desired-configuration plan with detailed
+exit codes, per-stack concurrency and lease locking. Code 2 fails drift monitoring;
+in PRs it is reported as a proposed change. Metadata-only state differences are
+reported separately. It never auto-applies. See [remote state and OIDC](remote-state.md).
 
 ## Cost estimation and controls
 

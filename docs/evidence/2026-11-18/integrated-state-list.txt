@@ -1,0 +1,41 @@
+Exported 2026-11-19 from the protected pre-migration snapshot of the 2026-11-18 deployment.
+Source: terraform state list -state=<protected-snapshot>
+Principal UUIDs in instance keys are redacted. No state values are included.
+
+data.azurerm_client_config.current
+data.azurerm_resource_group.foundation
+data.azurerm_subnet.private_endpoints
+data.azurerm_user_assigned_identity.foundation
+data.azurerm_virtual_network.foundation
+module.keyvault.azurerm_key_vault.this
+module.keyvault.azurerm_private_dns_zone.keyvault
+module.keyvault.azurerm_private_dns_zone_virtual_network_link.keyvault
+module.keyvault.azurerm_private_endpoint.keyvault
+module.keyvault.azurerm_role_assignment.secrets_reader["<redacted-uuid>"]
+module.monitoring.azurerm_log_analytics_workspace.this
+module.monitoring.azurerm_monitor_action_group.this
+module.monitoring.azurerm_monitor_diagnostic_setting.this
+module.monitoring.azurerm_monitor_metric_alert.this
+module.monitoring.azurerm_monitor_private_link_scope.this
+module.monitoring.azurerm_monitor_private_link_scoped_service.workspace
+module.monitoring.azurerm_private_dns_zone.monitoring["privatelink.agentsvc.azure-automation.net"]
+module.monitoring.azurerm_private_dns_zone.monitoring["privatelink.blob.core.windows.net"]
+module.monitoring.azurerm_private_dns_zone.monitoring["privatelink.monitor.azure.com"]
+module.monitoring.azurerm_private_dns_zone.monitoring["privatelink.ods.opinsights.azure.com"]
+module.monitoring.azurerm_private_dns_zone.monitoring["privatelink.oms.opinsights.azure.com"]
+module.monitoring.azurerm_private_dns_zone_virtual_network_link.monitoring["privatelink.agentsvc.azure-automation.net"]
+module.monitoring.azurerm_private_dns_zone_virtual_network_link.monitoring["privatelink.blob.core.windows.net"]
+module.monitoring.azurerm_private_dns_zone_virtual_network_link.monitoring["privatelink.monitor.azure.com"]
+module.monitoring.azurerm_private_dns_zone_virtual_network_link.monitoring["privatelink.ods.opinsights.azure.com"]
+module.monitoring.azurerm_private_dns_zone_virtual_network_link.monitoring["privatelink.oms.opinsights.azure.com"]
+module.monitoring.azurerm_private_endpoint.monitoring
+module.storage.azurerm_monitor_diagnostic_setting.blob
+module.storage.azurerm_monitor_diagnostic_setting.queue[0]
+module.storage.azurerm_private_endpoint.blob
+module.storage.azurerm_role_assignment.blob_data_contributor["<redacted-uuid>:application-data"]
+module.storage.azurerm_role_assignment.blob_data_contributor["<redacted-uuid>:audit-logs"]
+module.storage.azurerm_role_assignment.blob_data_contributor["<redacted-uuid>:backup-data"]
+module.storage.azurerm_storage_account.this
+module.storage.azurerm_storage_container.this["application-data"]
+module.storage.azurerm_storage_container.this["audit-logs"]
+module.storage.azurerm_storage_container.this["backup-data"]

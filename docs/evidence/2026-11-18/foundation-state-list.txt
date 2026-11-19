@@ -1,0 +1,27 @@
+Exported 2026-11-19 from the protected pre-migration snapshot of the 2026-11-18 deployment.
+Source: terraform state list -state=<protected-snapshot>
+Principal UUIDs in instance keys are redacted. No state values are included.
+
+module.identity.azurerm_user_assigned_identity.this
+module.networking.azurerm_network_security_group.subnet["application"]
+module.networking.azurerm_network_security_group.subnet["database"]
+module.networking.azurerm_network_security_group.subnet["management"]
+module.networking.azurerm_network_security_group.subnet["private-endpoints"]
+module.networking.azurerm_network_security_rule.deny_inbound["application"]
+module.networking.azurerm_network_security_rule.deny_inbound["database"]
+module.networking.azurerm_network_security_rule.deny_inbound["management"]
+module.networking.azurerm_network_security_rule.deny_inbound["private-endpoints"]
+module.networking.azurerm_network_security_rule.deny_outbound["application"]
+module.networking.azurerm_network_security_rule.deny_outbound["database"]
+module.networking.azurerm_network_security_rule.deny_outbound["management"]
+module.networking.azurerm_network_security_rule.deny_outbound["private-endpoints"]
+module.networking.azurerm_subnet.this["application"]
+module.networking.azurerm_subnet.this["database"]
+module.networking.azurerm_subnet.this["management"]
+module.networking.azurerm_subnet.this["private-endpoints"]
+module.networking.azurerm_subnet_network_security_group_association.this["application"]
+module.networking.azurerm_subnet_network_security_group_association.this["database"]
+module.networking.azurerm_subnet_network_security_group_association.this["management"]
+module.networking.azurerm_subnet_network_security_group_association.this["private-endpoints"]
+module.networking.azurerm_virtual_network.this
+module.resource_group.azurerm_resource_group.this
